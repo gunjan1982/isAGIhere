@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AI Industry Hub API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: people
+    description: AI industry people
+  - name: sources
+    description: Newsletters, blogs, podcasts
+  - name: communities
+    description: Reddit, Discord, X communities
+  - name: categories
+    description: Category listings
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,124 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /people:
+    get:
+      operationId: listPeople
+      tags: [people]
+      summary: List all AI industry people
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of people
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+
+  /people/{id}:
+    get:
+      operationId: getPerson
+      tags: [people]
+      summary: Get a person by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Person details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "404":
+          description: Not found
+
+  /sources:
+    get:
+      operationId: listSources
+      tags: [sources]
+      summary: List all sources (newsletters, blogs, podcasts)
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [newsletter, blog, podcast, youtube, news_site]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Source"
+
+  /communities:
+    get:
+      operationId: listCommunities
+      tags: [communities]
+      summary: List all communities
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [reddit, discord, x]
+      responses:
+        "200":
+          description: List of communities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Community"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [categories]
+      summary: Get aggregate stats for the hub
+      responses:
+        "200":
+          description: Hub stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HubStats"
+
+  /featured:
+    get:
+      operationId: getFeatured
+      tags: [categories]
+      summary: Get featured/spotlight content across categories
+      responses:
+        "200":
+          description: Featured content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeaturedContent"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +158,138 @@ components:
       required:
         - status
 
+    Person:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        organization:
+          type: string
+        category:
+          type: string
+          description: "godfathers | lab_ceos | hardware | builders | vibe_coders"
+        bio:
+          type: string
+        stance:
+          type: string
+        twitterHandle:
+          type: string
+        twitterFollowers:
+          type: string
+        primaryPlatform:
+          type: string
+        bestFor:
+          type: string
+        imageUrl:
+          type: string
+        isSpotlight:
+          type: boolean
+      required:
+        - id
+        - name
+        - role
+        - category
+
+    Source:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          description: "newsletter | blog | podcast | youtube | news_site"
+        description:
+          type: string
+        audience:
+          type: string
+        frequency:
+          type: string
+        url:
+          type: string
+        subscriberCount:
+          type: string
+        host:
+          type: string
+        bestFor:
+          type: string
+        isHighSignal:
+          type: boolean
+      required:
+        - id
+        - name
+        - type
+
+    Community:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        platform:
+          type: string
+          description: "reddit | discord | x"
+        memberCount:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        bestFor:
+          type: string
+      required:
+        - id
+        - name
+        - platform
+
+    HubStats:
+      type: object
+      properties:
+        totalPeople:
+          type: integer
+        totalSources:
+          type: integer
+        totalCommunities:
+          type: integer
+        categoryCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        sourceTypeCounts:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - totalPeople
+        - totalSources
+        - totalCommunities
+        - categoryCounts
+        - sourceTypeCounts
+
+    FeaturedContent:
+      type: object
+      properties:
+        spotlightPerson:
+          $ref: "#/components/schemas/Person"
+        topNewsletters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Source"
+        topPodcasts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Source"
+        vibeCodingVoices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Person"
+      required:
+        - topNewsletters
+        - topPodcasts
+        - vibeCodingVoices
