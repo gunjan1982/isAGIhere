@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal } from "lucide-react";
+import { Zap, Users, Radio, MessageSquare, Terminal, Activity } from "lucide-react";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -8,6 +8,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const navItems = [
     { href: "/", label: "Hub", icon: Terminal },
     { href: "/people", label: "People", icon: Users },
+    { href: "/feed", label: "Feed", icon: Activity },
     { href: "/sources", label: "Sources", icon: Radio },
     { href: "/communities", label: "Communities", icon: MessageSquare },
   ];

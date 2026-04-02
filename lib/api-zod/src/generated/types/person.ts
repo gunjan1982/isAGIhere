@@ -11,7 +11,6 @@ export interface Person {
   name: string;
   role: string;
   organization?: string;
-  /** godfathers | lab_ceos | hardware | builders | vibe_coders */
   category: string;
   bio?: string;
   stance?: string;

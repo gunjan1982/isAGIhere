@@ -9,7 +9,6 @@
 export interface Source {
   id: number;
   name: string;
-  /** newsletter | blog | podcast | youtube | news_site */
   type: string;
   description?: string;
   audience?: string;

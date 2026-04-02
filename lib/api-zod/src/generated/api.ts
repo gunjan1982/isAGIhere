@@ -27,9 +27,7 @@ export const ListPeopleResponseItem = zod.object({
   name: zod.string(),
   role: zod.string(),
   organization: zod.string().optional(),
-  category: zod
-    .string()
-    .describe("godfathers | lab_ceos | hardware | builders | vibe_coders"),
+  category: zod.string(),
   bio: zod.string().optional(),
   stance: zod.string().optional(),
   twitterHandle: zod.string().optional(),
@@ -53,9 +51,7 @@ export const GetPersonResponse = zod.object({
   name: zod.string(),
   role: zod.string(),
   organization: zod.string().optional(),
-  category: zod
-    .string()
-    .describe("godfathers | lab_ceos | hardware | builders | vibe_coders"),
+  category: zod.string(),
   bio: zod.string().optional(),
   stance: zod.string().optional(),
   twitterHandle: zod.string().optional(),
@@ -67,7 +63,34 @@ export const GetPersonResponse = zod.object({
 });
 
 /**
- * @summary List all sources (newsletters, blogs, podcasts)
+ * @summary Get the live feed for a specific person
+ */
+export const GetPersonFeedParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPersonFeedQueryParams = zod.object({
+  limit: zod.coerce.number().optional(),
+});
+
+export const GetPersonFeedResponseItem = zod.object({
+  id: zod.number(),
+  personId: zod.number().optional(),
+  personName: zod.string().optional(),
+  personCategory: zod.string().optional(),
+  title: zod.string(),
+  url: zod.string(),
+  description: zod.string().optional(),
+  sourceName: zod.string().optional(),
+  sourceUrl: zod.string().optional(),
+  imageUrl: zod.string().optional(),
+  publishedAt: zod.string().optional(),
+  type: zod.string().optional(),
+});
+export const GetPersonFeedResponse = zod.array(GetPersonFeedResponseItem);
+
+/**
+ * @summary List all sources
  */
 export const ListSourcesQueryParams = zod.object({
   type: zod
@@ -79,9 +102,7 @@ export const ListSourcesQueryParams = zod.object({
 export const ListSourcesResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
-  type: zod
-    .string()
-    .describe("newsletter | blog | podcast | youtube | news_site"),
+  type: zod.string(),
   description: zod.string().optional(),
   audience: zod.string().optional(),
   frequency: zod.string().optional(),
@@ -103,7 +124,7 @@ export const ListCommunitiesQueryParams = zod.object({
 export const ListCommunitiesResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
-  platform: zod.string().describe("reddit | discord | x"),
+  platform: zod.string(),
   memberCount: zod.string().optional(),
   description: zod.string().optional(),
   url: zod.string().optional(),
@@ -118,12 +139,13 @@ export const GetStatsResponse = zod.object({
   totalPeople: zod.number(),
   totalSources: zod.number(),
   totalCommunities: zod.number(),
+  totalFeedItems: zod.number(),
   categoryCounts: zod.record(zod.string(), zod.number()),
   sourceTypeCounts: zod.record(zod.string(), zod.number()),
 });
 
 /**
- * @summary Get featured/spotlight content across categories
+ * @summary Get featured/spotlight content
  */
 export const GetFeaturedResponse = zod.object({
   spotlightPerson: zod
@@ -132,9 +154,7 @@ export const GetFeaturedResponse = zod.object({
       name: zod.string(),
       role: zod.string(),
       organization: zod.string().optional(),
-      category: zod
-        .string()
-        .describe("godfathers | lab_ceos | hardware | builders | vibe_coders"),
+      category: zod.string(),
       bio: zod.string().optional(),
       stance: zod.string().optional(),
       twitterHandle: zod.string().optional(),
@@ -149,9 +169,7 @@ export const GetFeaturedResponse = zod.object({
     zod.object({
       id: zod.number(),
       name: zod.string(),
-      type: zod
-        .string()
-        .describe("newsletter | blog | podcast | youtube | news_site"),
+      type: zod.string(),
       description: zod.string().optional(),
       audience: zod.string().optional(),
       frequency: zod.string().optional(),
@@ -166,9 +184,7 @@ export const GetFeaturedResponse = zod.object({
     zod.object({
       id: zod.number(),
       name: zod.string(),
-      type: zod
-        .string()
-        .describe("newsletter | blog | podcast | youtube | news_site"),
+      type: zod.string(),
       description: zod.string().optional(),
       audience: zod.string().optional(),
       frequency: zod.string().optional(),
@@ -185,9 +201,7 @@ export const GetFeaturedResponse = zod.object({
       name: zod.string(),
       role: zod.string(),
       organization: zod.string().optional(),
-      category: zod
-        .string()
-        .describe("godfathers | lab_ceos | hardware | builders | vibe_coders"),
+      category: zod.string(),
       bio: zod.string().optional(),
       stance: zod.string().optional(),
       twitterHandle: zod.string().optional(),
@@ -198,4 +212,58 @@ export const GetFeaturedResponse = zod.object({
       isSpotlight: zod.boolean().optional(),
     }),
   ),
+  recentFeed: zod.array(
+    zod.object({
+      id: zod.number(),
+      personId: zod.number().optional(),
+      personName: zod.string().optional(),
+      personCategory: zod.string().optional(),
+      title: zod.string(),
+      url: zod.string(),
+      description: zod.string().optional(),
+      sourceName: zod.string().optional(),
+      sourceUrl: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      publishedAt: zod.string().optional(),
+      type: zod.string().optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get the global live feed
+ */
+export const GetFeedQueryParams = zod.object({
+  personId: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+  offset: zod.coerce.number().optional(),
+});
+
+export const GetFeedResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.number(),
+      personId: zod.number().optional(),
+      personName: zod.string().optional(),
+      personCategory: zod.string().optional(),
+      title: zod.string(),
+      url: zod.string(),
+      description: zod.string().optional(),
+      sourceName: zod.string().optional(),
+      sourceUrl: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      publishedAt: zod.string().optional(),
+      type: zod.string().optional(),
+    }),
+  ),
+  total: zod.number(),
+  hasMore: zod.boolean(),
+});
+
+/**
+ * @summary Trigger a feed refresh
+ */
+export const RefreshFeedResponse = zod.object({
+  fetched: zod.number(),
+  message: zod.string(),
 });

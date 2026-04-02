@@ -1,9 +1,10 @@
 import { useRoute } from "wouter";
-import { useGetPerson } from "@workspace/api-client-react";
+import { useGetPerson, useGetPersonFeed } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowLeft, ExternalLink, Twitter, Target, Building2, TerminalSquare } from "lucide-react";
+import { ArrowLeft, ExternalLink, Twitter, Target, Building2, TerminalSquare, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { FeedCard } from "@/components/feed-card";
 
 export default function PersonDetail() {
   const [, params] = useRoute("/people/:id");
@@ -11,6 +12,10 @@ export default function PersonDetail() {
   
   const { data: person, isLoading, isError } = useGetPerson(id, { 
     query: { enabled: !!id, queryKey: [`/api/people/${id}`] } 
+  });
+
+  const { data: feedData, isLoading: isFeedLoading } = useGetPersonFeed(id, { limit: 15 }, {
+    query: { enabled: !!id, queryKey: [`/api/people/${id}/feed`, { limit: 15 }] }
   });
 
   if (isLoading) {
@@ -161,6 +166,29 @@ export default function PersonDetail() {
                 <p className="text-sm md:text-base leading-relaxed">{person.stance}</p>
               </div>
             )}
+          </div>
+
+          <div className="space-y-4 pt-8">
+            <h3 className="font-mono text-lg font-bold text-foreground flex items-center gap-2 border-b border-border/50 pb-2">
+              <Activity className="h-5 w-5 text-primary" />
+              LATEST_ACTIVITY
+            </h3>
+            
+            <div className="flex flex-col gap-4">
+              {isFeedLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-32 w-full bg-secondary" />
+                ))
+              ) : feedData && feedData.length > 0 ? (
+                feedData.map((item) => (
+                  <FeedCard key={item.id} item={item} />
+                ))
+              ) : (
+                <div className="border border-border/50 bg-secondary/10 p-8 text-center font-mono text-muted-foreground">
+                  NO_ACTIVITY_RECORDED
+                </div>
+              )}
+            </div>
           </div>
 
         </div>

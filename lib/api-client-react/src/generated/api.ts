@@ -5,10 +5,13 @@
  * AI Industry Hub API
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
@@ -16,12 +19,17 @@ import type {
 import type {
   Community,
   FeaturedContent,
+  FeedItem,
+  FeedPage,
+  GetFeedParams,
+  GetPersonFeedParams,
   HealthStatus,
   HubStats,
   ListCommunitiesParams,
   ListPeopleParams,
   ListSourcesParams,
   Person,
+  RefreshResult,
   Source,
 } from "./api.schemas";
 
@@ -289,7 +297,116 @@ export function useGetPerson<
 }
 
 /**
- * @summary List all sources (newsletters, blogs, podcasts)
+ * @summary Get the live feed for a specific person
+ */
+export const getGetPersonFeedUrl = (
+  id: number,
+  params?: GetPersonFeedParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/people/${id}/feed?${stringifiedParams}`
+    : `/api/people/${id}/feed`;
+};
+
+export const getPersonFeed = async (
+  id: number,
+  params?: GetPersonFeedParams,
+  options?: RequestInit,
+): Promise<FeedItem[]> => {
+  return customFetch<FeedItem[]>(getGetPersonFeedUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPersonFeedQueryKey = (
+  id: number,
+  params?: GetPersonFeedParams,
+) => {
+  return [`/api/people/${id}/feed`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetPersonFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPersonFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params?: GetPersonFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPersonFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPersonFeedQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPersonFeed>>> = ({
+    signal,
+  }) => getPersonFeed(id, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPersonFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPersonFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPersonFeed>>
+>;
+export type GetPersonFeedQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the live feed for a specific person
+ */
+
+export function useGetPersonFeed<
+  TData = Awaited<ReturnType<typeof getPersonFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params?: GetPersonFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPersonFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPersonFeedQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all sources
  */
 export const getListSourcesUrl = (params?: ListSourcesParams) => {
   const normalizedParams = new URLSearchParams();
@@ -356,7 +473,7 @@ export type ListSourcesQueryResult = NonNullable<
 export type ListSourcesQueryError = ErrorType<unknown>;
 
 /**
- * @summary List all sources (newsletters, blogs, podcasts)
+ * @summary List all sources
  */
 
 export function useListSources<
@@ -542,7 +659,7 @@ export function useGetStats<
 }
 
 /**
- * @summary Get featured/spotlight content across categories
+ * @summary Get featured/spotlight content
  */
 export const getGetFeaturedUrl = () => {
   return `/api/featured`;
@@ -593,7 +710,7 @@ export type GetFeaturedQueryResult = NonNullable<
 export type GetFeaturedQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get featured/spotlight content across categories
+ * @summary Get featured/spotlight content
  */
 
 export function useGetFeatured<
@@ -615,3 +732,170 @@ export function useGetFeatured<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get the global live feed
+ */
+export const getGetFeedUrl = (params?: GetFeedParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/feed?${stringifiedParams}`
+    : `/api/feed`;
+};
+
+export const getFeed = async (
+  params?: GetFeedParams,
+  options?: RequestInit,
+): Promise<FeedPage> => {
+  return customFetch<FeedPage>(getGetFeedUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFeedQueryKey = (params?: GetFeedParams) => {
+  return [`/api/feed`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetFeedParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetFeedQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeed>>> = ({
+    signal,
+  }) => getFeed(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getFeed>>
+>;
+export type GetFeedQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the global live feed
+ */
+
+export function useGetFeed<
+  TData = Awaited<ReturnType<typeof getFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetFeedParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetFeedQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Trigger a feed refresh
+ */
+export const getRefreshFeedUrl = () => {
+  return `/api/feed/refresh`;
+};
+
+export const refreshFeed = async (
+  options?: RequestInit,
+): Promise<RefreshResult> => {
+  return customFetch<RefreshResult>(getRefreshFeedUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRefreshFeedMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refreshFeed>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof refreshFeed>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["refreshFeed"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof refreshFeed>>,
+    void
+  > = () => {
+    return refreshFeed(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RefreshFeedMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refreshFeed>>
+>;
+
+export type RefreshFeedMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Trigger a feed refresh
+ */
+export const useRefreshFeed = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refreshFeed>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof refreshFeed>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getRefreshFeedMutationOptions(options));
+};

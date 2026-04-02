@@ -21,10 +21,18 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ### `artifacts/ai-hub` — AI Industry Hub (primary web app)
 React + Vite frontend deployed at `/`. Dark terminal aesthetic with electric amber accents.
 Tracks people, newsletters, blogs, podcasts, YouTube channels, and communities in the AI industry.
-Pages: Home (`/`), People (`/people`), Person Detail (`/people/:id`), Sources (`/sources`), Communities (`/communities`).
+Pages: Home (`/`), People (`/people`), Person Detail (`/people/:id`), Sources (`/sources`), Communities (`/communities`), Feed (`/feed`).
 
 ### `artifacts/api-server` — Express API
-Serves at `/api`. Routes: `/healthz`, `/people`, `/people/:id`, `/sources`, `/communities`, `/stats`, `/featured`.
+Serves at `/api`. Routes: `/healthz`, `/people`, `/people/:id`, `/sources`, `/communities`, `/stats`, `/featured`, `/feed`, `/feed/refresh`, `/people/:id/feed`.
+
+## Live Feed System
+
+- RSS fetcher (`artifacts/api-server/src/lib/rss-fetcher.ts`) fetches Google News RSS per person + curated source feeds.
+- `feed_items` table stores articles with: personId (nullable), title, url, description, sourceName, publishedAt, type.
+- Feed refreshes on server startup, then every 30 minutes.
+- POST `/api/feed/refresh` triggers a manual refresh.
+- Frontend: `FeedCard` component, global `/feed` page with pagination, person-level feed in profile pages, feed preview on homepage.
 
 ## Structure
 
@@ -51,6 +59,7 @@ artifacts-monorepo/
 - `people` — AI industry figures (godfathers, lab_ceos, hardware, builders, vibe_coders)
 - `sources` — Newsletters, blogs, podcasts, YouTube channels, news sites
 - `communities` — Reddit subreddits, Discord servers
+- `feed_items` — Live news items fetched from RSS/Google News per tracked person
 
 ## Seeding
 

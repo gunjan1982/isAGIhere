@@ -5,6 +5,7 @@
  * AI Industry Hub API
  * OpenAPI spec version: 0.1.0
  */
+import type { FeedItem } from "./feedItem";
 import type { Person } from "./person";
 import type { Source } from "./source";
 
@@ -13,4 +14,5 @@ export interface FeaturedContent {
   topNewsletters: Source[];
   topPodcasts: Source[];
   vibeCodingVoices: Person[];
+  recentFeed: FeedItem[];
 }

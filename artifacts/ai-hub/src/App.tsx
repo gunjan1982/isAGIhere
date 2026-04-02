@@ -10,6 +10,7 @@ import PersonDetail from "@/pages/person-detail";
 import Sources from "@/pages/sources";
 import Communities from "@/pages/communities";
 import NotFound from "@/pages/not-found";
+import Feed from "@/pages/feed";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/people" component={People} />
         <Route path="/people/:id" component={PersonDetail} />
+        <Route path="/feed" component={Feed} />
         <Route path="/sources" component={Sources} />
         <Route path="/communities" component={Communities} />
         <Route component={NotFound} />

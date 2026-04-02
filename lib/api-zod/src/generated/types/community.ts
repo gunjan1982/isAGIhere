@@ -9,7 +9,6 @@
 export interface Community {
   id: number;
   name: string;
-  /** reddit | discord | x */
   platform: string;
   memberCount?: string;
   description?: string;

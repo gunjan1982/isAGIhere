@@ -1,15 +1,16 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { peopleTable, sourcesTable, communitiesTable } from "@workspace/db/schema";
-import { sql } from "drizzle-orm";
+import { peopleTable, sourcesTable, communitiesTable, feedItemsTable } from "@workspace/db/schema";
+import { count, desc, eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
 router.get("/stats", async (_req, res) => {
-  const [people, sources, communities] = await Promise.all([
+  const [people, sources, communities, [{ feedCount }]] = await Promise.all([
     db.select().from(peopleTable),
     db.select().from(sourcesTable),
     db.select().from(communitiesTable),
+    db.select({ feedCount: count() }).from(feedItemsTable),
   ]);
 
   const categoryCounts: Record<string, number> = {};
@@ -26,15 +27,35 @@ router.get("/stats", async (_req, res) => {
     totalPeople: people.length,
     totalSources: sources.length,
     totalCommunities: communities.length,
+    totalFeedItems: Number(feedCount),
     categoryCounts,
     sourceTypeCounts,
   });
 });
 
 router.get("/featured", async (_req, res) => {
-  const [allPeople, allSources] = await Promise.all([
+  const [allPeople, allSources, recentFeed] = await Promise.all([
     db.select().from(peopleTable),
     db.select().from(sourcesTable),
+    db
+      .select({
+        id: feedItemsTable.id,
+        personId: feedItemsTable.personId,
+        personName: peopleTable.name,
+        personCategory: peopleTable.category,
+        title: feedItemsTable.title,
+        url: feedItemsTable.url,
+        description: feedItemsTable.description,
+        sourceName: feedItemsTable.sourceName,
+        sourceUrl: feedItemsTable.sourceUrl,
+        imageUrl: feedItemsTable.imageUrl,
+        publishedAt: feedItemsTable.publishedAt,
+        type: feedItemsTable.type,
+      })
+      .from(feedItemsTable)
+      .leftJoin(peopleTable, eq(feedItemsTable.personId, peopleTable.id))
+      .orderBy(desc(feedItemsTable.publishedAt), desc(feedItemsTable.fetchedAt))
+      .limit(12),
   ]);
 
   const spotlightPerson = allPeople.find((p) => p.isSpotlight) || allPeople[0] || null;
@@ -47,6 +68,10 @@ router.get("/featured", async (_req, res) => {
     topNewsletters,
     topPodcasts,
     vibeCodingVoices,
+    recentFeed: recentFeed.map((item) => ({
+      ...item,
+      publishedAt: item.publishedAt ? item.publishedAt.toISOString() : null,
+    })),
   });
 });
 

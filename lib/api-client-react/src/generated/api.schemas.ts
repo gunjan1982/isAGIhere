@@ -14,7 +14,6 @@ export interface Person {
   name: string;
   role: string;
   organization?: string;
-  /** godfathers | lab_ceos | hardware | builders | vibe_coders */
   category: string;
   bio?: string;
   stance?: string;
@@ -29,7 +28,6 @@ export interface Person {
 export interface Source {
   id: number;
   name: string;
-  /** newsletter | blog | podcast | youtube | news_site */
   type: string;
   description?: string;
   audience?: string;
@@ -44,12 +42,37 @@ export interface Source {
 export interface Community {
   id: number;
   name: string;
-  /** reddit | discord | x */
   platform: string;
   memberCount?: string;
   description?: string;
   url?: string;
   bestFor?: string;
+}
+
+export interface FeedItem {
+  id: number;
+  personId?: number;
+  personName?: string;
+  personCategory?: string;
+  title: string;
+  url: string;
+  description?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  imageUrl?: string;
+  publishedAt?: string;
+  type?: string;
+}
+
+export interface FeedPage {
+  items: FeedItem[];
+  total: number;
+  hasMore: boolean;
+}
+
+export interface RefreshResult {
+  fetched: number;
+  message: string;
 }
 
 export type HubStatsCategoryCounts = { [key: string]: number };
@@ -60,6 +83,7 @@ export interface HubStats {
   totalPeople: number;
   totalSources: number;
   totalCommunities: number;
+  totalFeedItems: number;
   categoryCounts: HubStatsCategoryCounts;
   sourceTypeCounts: HubStatsSourceTypeCounts;
 }
@@ -69,11 +93,16 @@ export interface FeaturedContent {
   topNewsletters: Source[];
   topPodcasts: Source[];
   vibeCodingVoices: Person[];
+  recentFeed: FeedItem[];
 }
 
 export type ListPeopleParams = {
   category?: string;
   search?: string;
+};
+
+export type GetPersonFeedParams = {
+  limit?: number;
 };
 
 export type ListSourcesParams = {
@@ -104,3 +133,9 @@ export const ListCommunitiesPlatform = {
   discord: "discord",
   x: "x",
 } as const;
+
+export type GetFeedParams = {
+  personId?: number;
+  limit?: number;
+  offset?: number;
+};

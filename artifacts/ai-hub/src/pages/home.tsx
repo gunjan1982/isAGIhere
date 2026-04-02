@@ -1,9 +1,10 @@
 import { useGetFeatured, useGetStats } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { FeedCard } from "@/components/feed-card";
 
 function formatNumber(num: number) {
   return new Intl.NumberFormat("en-US").format(num);
@@ -193,6 +194,35 @@ export default function Home() {
           </div>
         </div>
 
+      </section>
+
+      {/* Live Feed Preview */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-border/50 pb-2">
+          <h2 className="text-xl font-bold font-mono text-foreground flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            LIVE_FEED_STREAM
+          </h2>
+          <Link href="/feed" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+            VIEW_ALL <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          {isFeaturedLoading ? (
+            Array(3).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-32 bg-secondary" />
+            ))
+          ) : featured?.recentFeed && featured.recentFeed.length > 0 ? (
+            featured.recentFeed.slice(0, 8).map((item) => (
+              <FeedCard key={item.id} item={item} />
+            ))
+          ) : (
+            <div className="border border-border/50 bg-secondary/10 p-8 text-center font-mono text-muted-foreground">
+              AWAITING_SIGNAL
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Directory Access */}

@@ -12,6 +12,7 @@ export interface HubStats {
   totalPeople: number;
   totalSources: number;
   totalCommunities: number;
+  totalFeedItems: number;
   categoryCounts: HubStatsCategoryCounts;
   sourceTypeCounts: HubStatsSourceTypeCounts;
 }

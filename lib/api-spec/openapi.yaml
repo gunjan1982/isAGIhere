@@ -17,6 +17,8 @@ tags:
     description: Reddit, Discord, X communities
   - name: categories
     description: Category listings
+  - name: feed
+    description: Live news and content feed
 paths:
   /healthz:
     get:
@@ -76,11 +78,36 @@ paths:
         "404":
           description: Not found
 
+  /people/{id}/feed:
+    get:
+      operationId: getPersonFeed
+      tags: [feed]
+      summary: Get the live feed for a specific person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Person's feed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedItem"
+
   /sources:
     get:
       operationId: listSources
       tags: [sources]
-      summary: List all sources (newsletters, blogs, podcasts)
+      summary: List all sources
       parameters:
         - name: type
           in: query
@@ -139,7 +166,7 @@ paths:
     get:
       operationId: getFeatured
       tags: [categories]
-      summary: Get featured/spotlight content across categories
+      summary: Get featured/spotlight content
       responses:
         "200":
           description: Featured content
@@ -147,6 +174,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FeaturedContent"
+
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get the global live feed
+      parameters:
+        - name: personId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Feed items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedPage"
+
+  /feed/refresh:
+    post:
+      operationId: refreshFeed
+      tags: [feed]
+      summary: Trigger a feed refresh
+      responses:
+        "200":
+          description: Refresh triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResult"
 
 components:
   schemas:
@@ -171,7 +237,6 @@ components:
           type: string
         category:
           type: string
-          description: "godfathers | lab_ceos | hardware | builders | vibe_coders"
         bio:
           type: string
         stance:
@@ -203,7 +268,6 @@ components:
           type: string
         type:
           type: string
-          description: "newsletter | blog | podcast | youtube | news_site"
         description:
           type: string
         audience:
@@ -234,7 +298,6 @@ components:
           type: string
         platform:
           type: string
-          description: "reddit | discord | x"
         memberCount:
           type: string
         description:
@@ -248,6 +311,65 @@ components:
         - name
         - platform
 
+    FeedItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        personId:
+          type: integer
+        personName:
+          type: string
+        personCategory:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+        description:
+          type: string
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+        imageUrl:
+          type: string
+        publishedAt:
+          type: string
+        type:
+          type: string
+      required:
+        - id
+        - title
+        - url
+
+    FeedPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedItem"
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+      required:
+        - items
+        - total
+        - hasMore
+
+    RefreshResult:
+      type: object
+      properties:
+        fetched:
+          type: integer
+        message:
+          type: string
+      required:
+        - fetched
+        - message
+
     HubStats:
       type: object
       properties:
@@ -256,6 +378,8 @@ components:
         totalSources:
           type: integer
         totalCommunities:
+          type: integer
+        totalFeedItems:
           type: integer
         categoryCounts:
           type: object
@@ -269,6 +393,7 @@ components:
         - totalPeople
         - totalSources
         - totalCommunities
+        - totalFeedItems
         - categoryCounts
         - sourceTypeCounts
 
@@ -289,7 +414,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Person"
+        recentFeed:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedItem"
       required:
         - topNewsletters
         - topPodcasts
         - vibeCodingVoices
+        - recentFeed

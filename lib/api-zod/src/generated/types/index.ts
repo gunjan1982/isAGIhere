@@ -8,6 +8,10 @@
 
 export * from "./community";
 export * from "./featuredContent";
+export * from "./feedItem";
+export * from "./feedPage";
+export * from "./getFeedParams";
+export * from "./getPersonFeedParams";
 export * from "./healthStatus";
 export * from "./hubStats";
 export * from "./hubStatsCategoryCounts";
@@ -18,4 +22,5 @@ export * from "./listPeopleParams";
 export * from "./listSourcesParams";
 export * from "./listSourcesType";
 export * from "./person";
+export * from "./refreshResult";
 export * from "./source";
