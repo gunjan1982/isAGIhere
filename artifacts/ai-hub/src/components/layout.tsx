@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal, Activity } from "lucide-react";
+import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit } from "lucide-react";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
 
   const navItems = [
     { href: "/", label: "Hub", icon: Terminal },
+    { href: "/agi", label: "Is AGI Here?", icon: BrainCircuit, highlight: true },
     { href: "/people", label: "People", icon: Users },
     { href: "/feed", label: "Feed", icon: Activity },
     { href: "/sources", label: "Sources", icon: Radio },
@@ -28,18 +29,27 @@ export function Layout({ children }: { children: ReactNode }) {
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                const isHighlight = (item as { highlight?: boolean }).highlight;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all ${
                       isActive
                         ? "text-primary bg-primary/10 border border-primary/20"
+                        : isHighlight
+                        ? "text-primary border border-primary/40 bg-primary/5 hover:bg-primary/15"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {isHighlight && !isActive && (
+                      <span className="relative flex h-1.5 w-1.5 ml-0.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+                      </span>
+                    )}
                   </Link>
                 );
               })}
