@@ -119,7 +119,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="bg-primary/10 p-1 group-hover:bg-primary/20 transition-colors">
                 <Zap className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-mono font-bold tracking-tight text-lg">AI_INDUSTRY_HUB</span>
+              <span className="font-mono font-bold tracking-tight text-lg">AI_WATER_COOLER</span>
             </Link>
             
             <nav className="hidden md:flex items-center gap-1">

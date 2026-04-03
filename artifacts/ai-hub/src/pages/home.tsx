@@ -60,7 +60,7 @@ export default function Home() {
               <span className="text-muted-foreground line-through decoration-primary">Noise</span>
             </h1>
             <p className="text-base text-muted-foreground font-mono leading-relaxed">
-              Curated telemetry on the people, publications, and communities shaping the frontier of artificial intelligence.
+              Curated peek into everything that's happening in AI — people, publications, communities, and the race to the frontier.
             </p>
           </div>
 
