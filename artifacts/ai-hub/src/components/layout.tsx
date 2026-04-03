@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { ReactNode, useState, useEffect } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen } from "lucide-react";
+import { ReactNode, useState, useEffect, useRef } from "react";
+import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
+import { useUser, useClerk, Show } from "@clerk/react";
 
 function useAgiCountdown() {
   const [now, setNow] = useState(new Date());
@@ -24,6 +25,75 @@ function useAgiCountdown() {
 
   const pad = (n: number, len = 2) => String(n).padStart(len, "0");
   return `${pad(days, 3)}:${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+}
+
+function UserMenu() {
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  if (!isLoaded) return null;
+
+  return (
+    <>
+      <Show when="signed-out">
+        <Link
+          href="/sign-in"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-mono font-medium border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-all"
+        >
+          <LogIn className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">SIGN_IN</span>
+        </Link>
+      </Show>
+
+      <Show when="signed-in">
+        <div className="relative" ref={ref}>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex items-center gap-2 px-2.5 py-1.5 border border-border/50 bg-secondary/20 hover:border-border/80 hover:bg-secondary/40 transition-all"
+          >
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
+            ) : (
+              <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="h-3 w-3 text-primary" />
+              </div>
+            )}
+            <span className="hidden sm:block font-mono text-xs text-foreground max-w-[100px] truncate">
+              {user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "USER"}
+            </span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </button>
+
+          {open && (
+            <div className="absolute right-0 top-full mt-1 w-52 border border-border/70 bg-background shadow-lg z-50 py-1">
+              <div className="px-3 py-2 border-b border-border/40">
+                <div className="text-xs font-mono text-muted-foreground truncate">
+                  {user?.emailAddresses?.[0]?.emailAddress}
+                </div>
+              </div>
+              <button
+                onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-mono text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                SIGN_OUT
+              </button>
+            </div>
+          )}
+        </div>
+      </Show>
+    </>
+  );
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -82,7 +152,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               href="/agi"
               className="group flex items-center gap-2 border border-primary/40 bg-primary/5 hover:bg-primary/15 hover:border-primary/70 px-3 py-1.5 transition-all"
@@ -95,6 +165,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <span className="hidden sm:block text-[10px] font-mono text-muted-foreground group-hover:text-primary transition-colors tracking-wide">AGI_IN</span>
               <span className="font-mono text-xs font-bold text-primary tabular-nums tracking-wider">{countdown}</span>
             </Link>
+            <UserMenu />
           </div>
         </div>
       </header>
