@@ -4,6 +4,7 @@ import { Radio, Search, Filter, ExternalLink, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { FollowButton } from "@/components/follow-button";
 
 const SOURCE_TYPES = [
   { id: "", label: "ALL" },
@@ -135,16 +136,19 @@ export default function Sources() {
                   <p className="text-[10px] font-mono text-muted-foreground">PRIMARY_VALUE:</p>
                   <p className="text-xs text-foreground/90">{source.bestFor}</p>
                 </div>
-                {source.url && (
-                  <a 
-                    href={source.url} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary hover:text-primary-foreground font-mono text-sm py-2 px-4 transition-colors mt-4 md:mt-0"
-                  >
-                    ACCESS_FEED <ExternalLink className="h-4 w-4" />
-                  </a>
-                )}
+                <div className="flex flex-col gap-2 mt-4 md:mt-0">
+                  {source.url && (
+                    <a 
+                      href={source.url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary hover:text-primary-foreground font-mono text-sm py-2 px-4 transition-colors"
+                    >
+                      ACCESS_FEED <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                  <FollowButton entityType="source" entityId={source.id} size="md" className="w-full justify-center" />
+                </div>
               </div>
             </div>
           ))

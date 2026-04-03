@@ -5,6 +5,7 @@ import sourcesRouter from "./sources";
 import communitiesRouter from "./communities";
 import statsRouter from "./stats";
 import feedRouter from "./feed";
+import userRouter from "./user";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(sourcesRouter);
 router.use(communitiesRouter);
 router.use(statsRouter);
 router.use(feedRouter);
+router.use(userRouter);
 
 export default router;

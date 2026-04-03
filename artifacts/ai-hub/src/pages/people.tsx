@@ -5,6 +5,7 @@ import { Search, Users, ExternalLink, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FollowButton } from "@/components/follow-button";
 
 const CATEGORIES = [
   { id: "", label: "ALL" },
@@ -119,7 +120,7 @@ export default function People() {
               </div>
               
               <div className="border-t border-border/50 p-4 bg-secondary/10 flex justify-between items-center">
-                <div className="flex gap-4">
+                <div className="flex gap-3 items-center">
                   {person.twitterHandle && (
                     <a 
                       href={`https://x.com/${person.twitterHandle}`} 
@@ -131,6 +132,7 @@ export default function People() {
                       @{person.twitterHandle}
                     </a>
                   )}
+                  <FollowButton entityType="person" entityId={person.id} />
                 </div>
                 <Link 
                   href={`/people/${person.id}`}

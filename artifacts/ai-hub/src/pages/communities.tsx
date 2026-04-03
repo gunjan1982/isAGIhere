@@ -3,6 +3,7 @@ import { useListCommunities } from "@workspace/api-client-react";
 import { MessageSquare, Filter, ExternalLink, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { FollowButton } from "@/components/follow-button";
 
 const PLATFORMS = [
   { id: "", label: "ALL" },
@@ -108,7 +109,7 @@ export default function Communities() {
                 </div>
               </div>
               
-              <div className="p-4 pt-0">
+              <div className="p-4 pt-0 flex flex-col gap-2">
                 {community.url ? (
                   <a 
                     href={community.url} 
@@ -123,6 +124,7 @@ export default function Communities() {
                     PRIVATE_NODE
                   </button>
                 )}
+                <FollowButton entityType="community" entityId={community.id} size="md" className="w-full justify-center" />
               </div>
             </div>
           ))

@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 import Feed from "@/pages/feed";
 import AgiTracker from "@/pages/agi-tracker";
 import Learn from "@/pages/learn";
+import MyHub from "@/pages/my-hub";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ function Router() {
         <Route path="/sources" component={Sources} />
         <Route path="/communities" component={Communities} />
         <Route path="/learn" component={Learn} />
+        <Route path="/my-hub" component={MyHub} />
         <Route path="/sign-in/*?" component={SignInPage} />
         <Route path="/sign-up/*?" component={SignUpPage} />
         <Route component={NotFound} />
