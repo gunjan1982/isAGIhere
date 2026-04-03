@@ -1,9 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2 } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { SignupNudge } from "./signup-nudge";
+import { usePageTracking } from "@/lib/useAnalytics";
 
 function useAgiCountdown() {
   const [now, setNow] = useState(new Date());
@@ -90,6 +91,14 @@ function UserMenu() {
                 <LayoutDashboard className="h-3.5 w-3.5" />
                 MY_HUB
               </Link>
+              <Link
+                href="/analytics"
+                onClick={() => setOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-mono text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <BarChart2 className="h-3.5 w-3.5" />
+                ANALYTICS
+              </Link>
               <button
                 onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm font-mono text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -108,6 +117,7 @@ function UserMenu() {
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const countdown = useAgiCountdown();
+  usePageTracking();
 
   const navItems = [
     { href: "/", label: "Hub", icon: Terminal },
