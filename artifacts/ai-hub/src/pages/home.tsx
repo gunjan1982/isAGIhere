@@ -5,6 +5,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
+import { useState, useEffect } from "react";
+import { PREDICTIONS, computeComposite } from "@/lib/agi";
+
+function useAgiCountdown() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  const compositeDays = computeComposite(PREDICTIONS, midnight);
+  const targetMs = midnight.getTime() + compositeDays * 24 * 60 * 60 * 1000;
+  const diffMs = Math.max(0, targetMs - now.getTime());
+  const totalSecs = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+  const pad = (n: number, len = 2) => String(n).padStart(len, "0");
+  return { days: pad(days, 3), hours: pad(hours), mins: pad(mins), secs: pad(secs) };
+}
 
 function formatNumber(num: number) {
   return new Intl.NumberFormat("en-US").format(num);
@@ -14,26 +36,88 @@ export default function Home() {
   const { data: stats, isLoading: isStatsLoading, isError: isStatsError } = useGetStats();
   const { data: featured, isLoading: isFeaturedLoading, isError: isFeaturedError } = useGetFeatured();
 
+  const countdown = useAgiCountdown();
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden border border-border/50 bg-secondary/20 p-8 md:p-12">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-mono text-primary mb-4">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            INTELLIGENCE_STREAM_ACTIVE
+      <section className="relative overflow-hidden border border-border/50 bg-secondary/20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--primary)/0.08)_0%,_transparent_60%)]" />
+        <div className="relative z-10 grid md:grid-cols-2 min-h-[280px]">
+
+          {/* Left: text */}
+          <div className="flex flex-col justify-center p-8 md:p-12 space-y-4 border-r border-border/40">
+            <div className="inline-flex w-fit items-center gap-2 border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-mono text-primary">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+              </span>
+              INTELLIGENCE_STREAM_ACTIVE
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
+              The Signal in the{" "}
+              <span className="text-muted-foreground line-through decoration-primary">Noise</span>
+            </h1>
+            <p className="text-base text-muted-foreground font-mono leading-relaxed">
+              Curated telemetry on the people, publications, and communities shaping the frontier of artificial intelligence.
+            </p>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-            The Signal in the <span className="text-muted-foreground line-through decoration-primary">Noise</span>
-          </h1>
-          <p className="text-lg text-muted-foreground md:text-xl font-mono max-w-2xl leading-relaxed">
-            Curated telemetry on the people, publications, and communities shaping the frontier of artificial intelligence.
-          </p>
+
+          {/* Right: AGI countdown */}
+          <Link href="/agi" className="group flex flex-col items-center justify-center p-8 md:p-12 gap-3 hover:bg-primary/5 transition-colors cursor-pointer">
+            <div className="text-[11px] font-mono tracking-[0.25em] text-muted-foreground group-hover:text-primary/70 transition-colors">
+              WEIGHTED_CONSENSUS_AGI_IN
+            </div>
+
+            {/* Big clock */}
+            <div className="flex items-end gap-1 md:gap-2">
+              {/* Days */}
+              <div className="flex flex-col items-center">
+                <span className="font-mono font-black tabular-nums text-primary leading-none"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
+                  {countdown.days}
+                </span>
+                <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">DAYS</span>
+              </div>
+              <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
+              {/* Hours */}
+              <div className="flex flex-col items-center">
+                <span className="font-mono font-black tabular-nums text-primary leading-none"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
+                  {countdown.hours}
+                </span>
+                <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">HRS</span>
+              </div>
+              <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
+              {/* Mins */}
+              <div className="flex flex-col items-center">
+                <span className="font-mono font-black tabular-nums text-primary leading-none"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
+                  {countdown.mins}
+                </span>
+                <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">MIN</span>
+              </div>
+              <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
+              {/* Secs */}
+              <div className="flex flex-col items-center">
+                <span className="font-mono font-black tabular-nums text-primary leading-none"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
+                  {countdown.secs}
+                </span>
+                <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">SEC</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground group-hover:text-primary transition-colors">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              </span>
+              LIVE · CLICK_TO_SEE_TRACKER →
+            </div>
+          </Link>
+
         </div>
       </section>
 
