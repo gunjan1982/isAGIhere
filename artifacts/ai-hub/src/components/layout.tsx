@@ -3,6 +3,7 @@ import { ReactNode, useState, useEffect, useRef } from "react";
 import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
+import { SignupNudge } from "./signup-nudge";
 
 function useAgiCountdown() {
   const [now, setNow] = useState(new Date());
@@ -170,6 +171,8 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       
+      <SignupNudge />
+
       {/* Mobile Nav */}
       <div className="md:hidden border-b border-border/50 bg-secondary/20">
         <div className="flex overflow-x-auto p-2 gap-2">
