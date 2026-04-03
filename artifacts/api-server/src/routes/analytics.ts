@@ -93,10 +93,10 @@ router.get("/analytics/stats", async (req, res) => {
   }
 });
 
-// GET /api/analytics/heatmap — public, daily counts for the last 365 days
+// GET /api/analytics/heatmap — public, daily counts for the last 30 days
 router.get("/analytics/heatmap", async (_req, res) => {
   try {
-    const start = new Date(Date.now() - 365 * 86400000);
+    const start = new Date(Date.now() - 30 * 86400000);
     const result = await db.execute(sql`
       SELECT
         DATE(created_at) AS day,
