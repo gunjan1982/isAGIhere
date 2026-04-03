@@ -28,6 +28,20 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Ben's Bites", url: "https://bensbites.beehiiv.com/feed" },
   { name: "TLDR AI", url: "https://tldr.tech/ai/rss" },
   { name: "3Blue1Brown", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" },
+  // News Websites
+  { name: "Google Research Blog", url: "https://research.google/blog/rss" },
+  { name: "The Verge - AI", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
+  { name: "WIRED - AI", url: "https://www.wired.com/feed/tag/ai/latest/rss" },
+  { name: "TechCrunch - AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/" },
+  { name: "The Guardian - AI", url: "https://www.theguardian.com/technology/artificialintelligenceai/rss" },
+  { name: "Ars Technica - AI", url: "https://feeds.arstechnica.com/arstechnica/index" },
+  { name: "KDnuggets", url: "https://www.kdnuggets.com/feed/" },
+  { name: "Hacker News - AI", url: "https://hnrss.org/newest?q=AI+LLM+machine+learning&count=20" },
+  // Research & Company Blogs
+  { name: "Meta AI Blog", url: "https://engineering.fb.com/category/ai-research/feed/" },
+  { name: "AWS Machine Learning Blog", url: "https://aws.amazon.com/blogs/machine-learning/feed/" },
+  { name: "MIRI Blog", url: "https://intelligence.org/feed/" },
+  { name: "O'Reilly AI & ML", url: "https://www.oreilly.com/radar/topics/ai-ml/feed/index.xml" },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {
