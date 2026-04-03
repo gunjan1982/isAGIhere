@@ -1,9 +1,34 @@
 import { Link, useLocation } from "wouter";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen } from "lucide-react";
+import { PREDICTIONS, computeComposite } from "@/lib/agi";
+
+function useAgiCountdown() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  const compositeDays = computeComposite(PREDICTIONS, midnight);
+  const targetMs = midnight.getTime() + compositeDays * 24 * 60 * 60 * 1000;
+  const diffMs = Math.max(0, targetMs - now.getTime());
+
+  const totalSecs = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+
+  const pad = (n: number, len = 2) => String(n).padStart(len, "0");
+  return `${pad(days, 3)}:${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const countdown = useAgiCountdown();
 
   const navItems = [
     { href: "/", label: "Hub", icon: Terminal },
@@ -57,11 +82,19 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-muted-foreground">
-              <span className="animate-pulse text-primary block h-2 w-2 bg-primary rounded-full"></span>
-              SYS_ONLINE
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/agi"
+              className="group flex items-center gap-2 border border-primary/40 bg-primary/5 hover:bg-primary/15 hover:border-primary/70 px-3 py-1.5 transition-all"
+              title="Is AGI Here? — click to see the tracker"
+            >
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              </span>
+              <span className="hidden sm:block text-[10px] font-mono text-muted-foreground group-hover:text-primary transition-colors tracking-wide">AGI_IN</span>
+              <span className="font-mono text-xs font-bold text-primary tabular-nums tracking-wider">{countdown}</span>
+            </Link>
           </div>
         </div>
       </header>
