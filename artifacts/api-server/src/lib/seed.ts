@@ -23,6 +23,10 @@ const people = [
   { name: "Nate Liason", role: "Author & Vibe Coding Educator", organization: "Independent", category: "vibe_coders", bio: "75.8K followers on X. Teaches vibe coding workflows to non-technical builders. Focuses on practical no-code-adjacent AI building.", stance: null, twitterHandle: "nateliason", twitterFollowers: "75.8K", primaryPlatform: "X + Newsletter", bestFor: "Practical vibe coding workflows for non-technical builders", isSpotlight: false },
   { name: "Peter Steinberger", role: "Developer & Vibe Coder", organization: "Independent", category: "vibe_coders", bio: "41.4K followers on X. Bridges between vibe coding and serious agentic engineering. Shows what professionals can build with AI assistance.", stance: null, twitterHandle: "steipete", twitterFollowers: "41.4K", primaryPlatform: "X", bestFor: "Professional-grade vibe coding; what serious engineers can ship with AI tools", isSpotlight: false },
   { name: "Matt Palmer", role: "Vibe Coding Lead at Replit", organization: "Replit", category: "vibe_coders", bio: "28.2K followers on X. Works on vibe coding product at Replit — inside view on the tools powering the movement.", stance: null, twitterHandle: "mattppal", twitterFollowers: "28.2K", primaryPlatform: "X", bestFor: "Inside view on vibe coding tooling; what Replit is building for AI-assisted development", isSpotlight: false },
+  { name: "Aravind Srinivas", role: "CEO, Perplexity AI", organization: "Perplexity AI", category: "lab_ceos", bio: "Built Perplexity into a search-disrupting AI company valued at $14B. Former researcher at OpenAI and Google DeepMind. Launched Perplexity Computer as a safer alternative to AI computer-use tools.", stance: "Pragmatic optimist — believes AI can fundamentally reimagine how we access and synthesize information", twitterHandle: "AravSrinivas", twitterFollowers: "300K+", primaryPlatform: "X + LinkedIn", bestFor: "AI search, information retrieval, and the future of how we access knowledge", isSpotlight: false },
+  { name: "Guillermo Rauch", role: "CEO, Vercel", organization: "Vercel", category: "builders", bio: "Creator of Next.js — the framework powering a huge share of the AI-era web. Forbes profile March 2026. Building the infrastructure layer for AI-generated frontends.", stance: "Infrastructure optimist — AI dramatically lowers the floor for web creation", twitterHandle: "rauchg", twitterFollowers: "500K+", primaryPlatform: "X", bestFor: "AI-era web development and frontend infrastructure; where web tooling is heading next", isSpotlight: false },
+  { name: "Ethan Mollick", role: "Professor, Wharton; Author of Co-Intelligence", organization: "Wharton School, UPenn", category: "builders", bio: "Writes One Useful Thing — the most practical AI learning resource for knowledge workers. Author of Co-Intelligence. Runs real experiments on how AI changes work, education, and creativity.", stance: "Evidence-based optimist — rigorously tests what AI can and cannot do rather than speculating", twitterHandle: "emollick", twitterFollowers: "600K+", primaryPlatform: "Substack + X", bestFor: "How AI changes knowledge work and education — backed by real experiments, not hype", isSpotlight: false },
+  { name: "Sigrid Jin", role: "Developer & World's Most Active Claude Code User", organization: "Independent", category: "vibe_coders", bio: "Reported by WSJ to have personally used 25 billion Claude tokens in a year. When Anthropic accidentally leaked their source code via npm, he rewrote the entire thing in Python from scratch before sunrise — the resulting 'claw-code' repo hit 30,000 GitHub stars faster than any repo in history.", stance: null, twitterHandle: "sigridjin", twitterFollowers: "50K+", primaryPlatform: "GitHub + X", bestFor: "What's possible at the absolute frontier of AI-assisted engineering; living proof of AI's productivity multiplier", isSpotlight: false },
 ];
 
 const sources = [
@@ -45,6 +49,9 @@ const sources = [
   { name: "Two Minute Papers", type: "youtube", description: "Academic AI research summarized in short, engaging videos", audience: "Research-curious audience", frequency: "Weekly", url: "https://youtube.com/@TwoMinutePapers", subscriberCount: null, host: "Karoly Zsolnai-Fehér", bestFor: "Stay current on AI research papers without reading them yourself", isHighSignal: false },
   { name: "Techmeme", type: "news_site", description: "Real-time tech news aggregator — updated continuously, best tech news hub overall", audience: "All tech professionals", frequency: "Real-time", url: "https://techmeme.com", subscriberCount: null, host: null, bestFor: "Best overall tech news aggregator — everything important surfaces here", isHighSignal: true },
   { name: "VentureBeat AI", type: "news_site", description: "Product launches, funding rounds, and enterprise AI adoption coverage", audience: "Enterprise tech leaders", frequency: "Daily", url: "https://venturebeat.com/ai", subscriberCount: null, host: null, bestFor: "Enterprise AI adoption, product launches, and funding news", isHighSignal: false },
+  { name: "One Useful Thing", type: "newsletter", description: "Ethan Mollick's rigorous, experiment-backed essays on how AI is changing knowledge work, education, and creativity. One of the most widely shared AI reads among non-technical professionals.", audience: "Knowledge workers, educators, managers", frequency: "Weekly", url: "https://www.oneusefulthing.org", subscriberCount: "400K+", host: "Ethan Mollick", bestFor: "How AI changes real work — backed by experiments, not hype; essential for anyone applying AI in professional settings", isHighSignal: true },
+  { name: "Prompt Capital", type: "newsletter", description: "India-focused AI newsletter decoding global AI trends, policy, and investments — including Budget AI analysis, Google's century bonds, and frontier model developments.", audience: "Indian tech professionals and investors", frequency: "Weekly", url: "https://promptcapital.substack.com", subscriberCount: null, host: "Rohit Singh", bestFor: "India-angle AI coverage — policy, investment, and global AI developments translated for the Indian context", isHighSignal: false },
+  { name: "Dario Amodei's Essays", type: "blog", description: "Long-form essays from Anthropic's CEO on the philosophy and future of AI. 'Machines of Loving Grace' and 'The Adolescence of Technology' are essential reads for anyone tracking AGI timelines.", audience: "Researchers, founders, policy thinkers", frequency: "Occasional", url: "https://darioamodei.com", subscriberCount: null, host: "Dario Amodei", bestFor: "The most rigorous long-form thinking on what powerful AI means for humanity — primary source for Anthropic's worldview", isHighSignal: true },
 ];
 
 const communities = [
@@ -56,6 +63,7 @@ const communities = [
   { name: "Hugging Face Discord", platform: "discord", memberCount: "50K+", description: "Open-source ML, NLP, and dataset sharing community", url: "https://discord.gg/huggingface", bestFor: "Open-source model sharing, dataset collaboration, ML research" },
   { name: "Learn AI Together", platform: "discord", memberCount: "30K+", description: "Community-driven learning with weekly reading groups and job postings", url: "https://discord.gg/learnaitogether", bestFor: "Structured AI learning, reading groups, and job hunting" },
   { name: "Latent Space Discord", platform: "discord", memberCount: "20K+", description: "AI engineering community for builders, linked to the Latent Space podcast", url: "https://discord.gg/latentspace", bestFor: "AI engineering discussions for serious builders" },
+  { name: "CC For Everyone", platform: "community", memberCount: null, description: "Community dedicated to making Claude Code accessible to all — tutorials, tips, and resources for non-engineers using AI coding tools", url: "https://ccforeveryone.com", bestFor: "Getting started with Claude Code and AI-assisted development as a non-technical user" },
 ];
 
 export async function seedIfEmpty() {
@@ -69,4 +77,30 @@ export async function seedIfEmpty() {
   await db.insert(communitiesTable).values(communities);
 
   logger.info({ people: people.length, sources: sources.length, communities: communities.length }, "Seed complete");
+}
+
+export async function updateSeedData() {
+  const existingPeople = await db.select({ name: peopleTable.name }).from(peopleTable);
+  const existingNames = new Set(existingPeople.map((p) => p.name));
+  const newPeople = people.filter((p) => !existingNames.has(p.name));
+  if (newPeople.length > 0) {
+    await db.insert(peopleTable).values(newPeople);
+    logger.info({ count: newPeople.length, names: newPeople.map((p) => p.name) }, "Added new people");
+  }
+
+  const existingSources = await db.select({ name: sourcesTable.name }).from(sourcesTable);
+  const existingSourceNames = new Set(existingSources.map((s) => s.name));
+  const newSources = sources.filter((s) => !existingSourceNames.has(s.name));
+  if (newSources.length > 0) {
+    await db.insert(sourcesTable).values(newSources);
+    logger.info({ count: newSources.length, names: newSources.map((s) => s.name) }, "Added new sources");
+  }
+
+  const existingCommunities = await db.select({ name: communitiesTable.name }).from(communitiesTable);
+  const existingCommunityNames = new Set(existingCommunities.map((c) => c.name));
+  const newCommunities = communities.filter((c) => !existingCommunityNames.has(c.name));
+  if (newCommunities.length > 0) {
+    await db.insert(communitiesTable).values(newCommunities);
+    logger.info({ count: newCommunities.length, names: newCommunities.map((c) => c.name) }, "Added new communities");
+  }
 }

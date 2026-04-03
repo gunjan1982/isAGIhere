@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { seedIfEmpty } from "./lib/seed";
+import { seedIfEmpty, updateSeedData } from "./lib/seed";
 import { refreshFeeds } from "./lib/rss-fetcher";
 
 const rawPort = process.env["PORT"];
@@ -27,8 +27,9 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  // Seed static data if empty, then kick off first feed refresh
+  // Seed static data if empty, apply any new entries, then kick off first feed refresh
   seedIfEmpty()
+    .then(() => updateSeedData())
     .then(() => refreshFeeds())
     .then((count) => logger.info({ count }, "Initial feed refresh complete"))
     .catch((e) => logger.error({ err: e }, "Startup background tasks failed"));
