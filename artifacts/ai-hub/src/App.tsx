@@ -12,6 +12,7 @@ import Communities from "@/pages/communities";
 import NotFound from "@/pages/not-found";
 import Feed from "@/pages/feed";
 import AgiTracker from "@/pages/agi-tracker";
+import Learn from "@/pages/learn";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ function Router() {
         <Route path="/feed" component={Feed} />
         <Route path="/sources" component={Sources} />
         <Route path="/communities" component={Communities} />
+        <Route path="/learn" component={Learn} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

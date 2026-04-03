@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit } from "lucide-react";
+import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen } from "lucide-react";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -10,6 +10,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/agi", label: "Is AGI Here?", icon: BrainCircuit, highlight: true },
     { href: "/people", label: "People", icon: Users },
     { href: "/feed", label: "Feed", icon: Activity },
+    { href: "/learn", label: "Learn", icon: BookOpen },
     { href: "/sources", label: "Sources", icon: Radio },
     { href: "/communities", label: "Communities", icon: MessageSquare },
   ];
