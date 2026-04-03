@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { Zap, Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2 } from "lucide-react";
+import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2 } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { SignupNudge } from "./signup-nudge";
@@ -135,9 +135,11 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-primary/10 p-1 group-hover:bg-primary/20 transition-colors">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="AI Water Cooler"
+                className="h-8 w-8 object-contain group-hover:scale-105 transition-transform"
+              />
               <span className="font-mono font-bold tracking-tight text-lg">AI_WATER_COOLER</span>
             </Link>
             
