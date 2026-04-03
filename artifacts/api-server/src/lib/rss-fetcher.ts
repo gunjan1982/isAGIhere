@@ -27,6 +27,7 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "AlphaSignal", url: "https://alphasignal.substack.com/feed" },
   { name: "Ben's Bites", url: "https://bensbites.beehiiv.com/feed" },
   { name: "TLDR AI", url: "https://tldr.tech/ai/rss" },
+  { name: "3Blue1Brown", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {
