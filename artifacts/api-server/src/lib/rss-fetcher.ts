@@ -23,6 +23,10 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Lilian Weng's Blog", url: "https://lilianweng.github.io/index.xml" },
   { name: "The Batch (DeepLearning.AI)", url: "https://www.deeplearning.ai/the-batch/feed/" },
   { name: "Latent Space", url: "https://www.latent.space/feed" },
+  { name: "The Neuron", url: "https://www.theneurondaily.com/feed" },
+  { name: "AlphaSignal", url: "https://alphasignal.substack.com/feed" },
+  { name: "Ben's Bites", url: "https://bensbites.beehiiv.com/feed" },
+  { name: "TLDR AI", url: "https://tldr.tech/ai/rss" },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {
