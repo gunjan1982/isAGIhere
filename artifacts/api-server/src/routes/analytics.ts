@@ -93,4 +93,23 @@ router.get("/analytics/stats", async (req, res) => {
   }
 });
 
+// GET /api/analytics/heatmap — public, daily counts for the last 365 days
+router.get("/analytics/heatmap", async (_req, res) => {
+  try {
+    const start = new Date(Date.now() - 365 * 86400000);
+    const result = await db.execute(sql`
+      SELECT
+        DATE(created_at) AS day,
+        COUNT(*) AS views
+      FROM page_views
+      WHERE created_at >= ${start}
+      GROUP BY DATE(created_at)
+      ORDER BY day ASC
+    `);
+    res.json({ days: result.rows });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch heatmap" });
+  }
+});
+
 export default router;

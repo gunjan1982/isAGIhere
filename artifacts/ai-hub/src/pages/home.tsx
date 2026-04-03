@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
 import { useState, useEffect } from "react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
+import { VisitorHeatmap } from "@/components/visitor-heatmap";
 
 function useAgiCountdown() {
   const [now, setNow] = useState(new Date());
@@ -327,6 +328,9 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">Active hubs on Discord, Reddit, and X.</p>
         </Link>
       </section>
+
+      {/* Visitor Heatmap */}
+      <VisitorHeatmap />
 
     </div>
   );
