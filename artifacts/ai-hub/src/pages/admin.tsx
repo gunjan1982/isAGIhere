@@ -135,15 +135,17 @@ function SparkLine({ daily }: { daily: PagesData["daily"] }) {
 }
 
 function AdminDashboard() {
-  const { data: overview, isLoading: ovLoading, refetch: refetchOverview } =
+  const { data: overview, isLoading: ovLoading, refetch: refetchOverview, error: ovError } =
     useQuery<Overview>({
       queryKey: ["admin-overview"],
       queryFn: async () => {
         const res = await fetch(`${BASE}/api/admin/overview`, { credentials: "include" });
+        if (res.status === 403) throw Object.assign(new Error("OWNER_ONLY"), { status: 403 });
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
       refetchInterval: 60_000,
+      retry: false,
     });
 
   const { data: usersData, isLoading: usersLoading } =
@@ -154,6 +156,8 @@ function AdminDashboard() {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
+      enabled: !(ovError as any)?.status,
+      retry: false,
     });
 
   const { data: pages, isLoading: pagesLoading } =
@@ -164,9 +168,24 @@ function AdminDashboard() {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
+      enabled: !(ovError as any)?.status,
+      retry: false,
     });
 
   const isLoading = ovLoading || usersLoading || pagesLoading;
+
+  // Not the owner
+  if ((ovError as any)?.status === 403) {
+    return (
+      <div className="border border-destructive/30 bg-destructive/5 p-12 flex flex-col items-center gap-4 text-center">
+        <ShieldCheck className="h-12 w-12 text-destructive/40" />
+        <div className="space-y-2">
+          <p className="font-mono font-bold text-destructive">ACCESS_DENIED</p>
+          <p className="text-sm text-muted-foreground font-mono">This panel is restricted to the site owner.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

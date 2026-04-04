@@ -6,22 +6,47 @@ import { gte, sql, count, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-function requireAuth(req: any, res: any): string | null {
+function clerk() {
+  return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+}
+
+// Cache the owner ID so we don't hit Clerk on every request
+let cachedOwnerId: string | null = null;
+
+async function getOwnerId(): Promise<string | null> {
+  if (cachedOwnerId) return cachedOwnerId;
+  try {
+    // Owner = the user with the earliest createdAt in Clerk
+    const result = await clerk().users.getUserList({ limit: 500, orderBy: "+created_at" });
+    const first = result.data[0];
+    if (first) {
+      cachedOwnerId = first.id;
+      return first.id;
+    }
+  } catch (e) {
+    console.error("Failed to determine owner ID", e);
+  }
+  return null;
+}
+
+// Returns the userId if auth is valid AND the user is the owner, otherwise sends 401/403
+async function requireOwner(req: any, res: any): Promise<string | null> {
   const auth = getAuth(req);
   if (!auth?.userId) {
-    res.status(401).json({ error: "UNAUTHORIZED" });
+    res.status(401).json({ error: "SIGN_IN_REQUIRED" });
+    return null;
+  }
+  const ownerId = await getOwnerId();
+  if (!ownerId || auth.userId !== ownerId) {
+    res.status(403).json({ error: "OWNER_ONLY" });
     return null;
   }
   return auth.userId;
 }
 
-function clerk() {
-  return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-}
-
-// GET /api/admin/overview — combined user + traffic summary
+// GET /api/admin/overview — combined user + traffic summary (owner only)
 router.get("/admin/overview", async (req, res) => {
-  if (!requireAuth(req, res)) return;
+  if (!await requireOwner(req, res)) return;
   try {
     const now = new Date();
     const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
@@ -55,27 +80,25 @@ router.get("/admin/overview", async (req, res) => {
   }
 });
 
-// GET /api/admin/users — paginated user list from Clerk
+// GET /api/admin/users — full user list from Clerk (owner only)
 router.get("/admin/users", async (req, res) => {
-  if (!requireAuth(req, res)) return;
+  if (!await requireOwner(req, res)) return;
   try {
     const limit  = Math.min(Number(req.query.limit  ?? 50), 200);
     const offset = Number(req.query.offset ?? 0);
 
     const result = await clerk().users.getUserList({
-      limit,
-      offset,
-      orderBy: "-created_at",
+      limit, offset, orderBy: "-created_at",
     });
 
     const users = result.data.map(u => ({
-      id:          u.id,
-      email:       u.emailAddresses?.[0]?.emailAddress ?? null,
-      firstName:   u.firstName,
-      lastName:    u.lastName,
-      imageUrl:    u.imageUrl,
-      username:    u.username,
-      createdAt:   u.createdAt,
+      id:           u.id,
+      email:        u.emailAddresses?.[0]?.emailAddress ?? null,
+      firstName:    u.firstName,
+      lastName:     u.lastName,
+      imageUrl:     u.imageUrl,
+      username:     u.username,
+      createdAt:    u.createdAt,
       lastSignInAt: u.lastSignInAt,
     }));
 
@@ -86,11 +109,12 @@ router.get("/admin/users", async (req, res) => {
   }
 });
 
-// GET /api/admin/pages — top pages all time + last 7d
+// GET /api/admin/pages — top pages + daily chart (owner only)
 router.get("/admin/pages", async (req, res) => {
-  if (!requireAuth(req, res)) return;
+  if (!await requireOwner(req, res)) return;
   try {
-    const start7 = new Date(Date.now() - 7 * 86400000);
+    const start7  = new Date(Date.now() - 7  * 86400000);
+    const start30 = new Date(Date.now() - 30 * 86400000);
 
     const [allTime, last7, daily] = await Promise.all([
       db.select({ path: pageViewsTable.path, views: count() })
@@ -109,7 +133,7 @@ router.get("/admin/pages", async (req, res) => {
       db.execute(sql`
         SELECT DATE(created_at) AS day, COUNT(*) AS views, COUNT(DISTINCT session_id) AS sessions
         FROM page_views
-        WHERE created_at >= ${new Date(Date.now() - 30 * 86400000)}
+        WHERE created_at >= ${start30}
         GROUP BY DATE(created_at)
         ORDER BY day ASC
       `),
