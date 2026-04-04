@@ -10,34 +10,24 @@ function clerk() {
   return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 }
 
-// Cache the owner ID so we don't hit Clerk on every request
-let cachedOwnerId: string | null = null;
+const ADMIN_EMAIL = "gunjan1982@gmail.com";
 
-async function getOwnerId(): Promise<string | null> {
-  if (cachedOwnerId) return cachedOwnerId;
-  try {
-    // Owner = the user with the earliest createdAt in Clerk
-    const result = await clerk().users.getUserList({ limit: 500, orderBy: "+created_at" });
-    const first = result.data[0];
-    if (first) {
-      cachedOwnerId = first.id;
-      return first.id;
-    }
-  } catch (e) {
-    console.error("Failed to determine owner ID", e);
-  }
-  return null;
-}
-
-// Returns the userId if auth is valid AND the user is the owner, otherwise sends 401/403
+// Returns the userId if auth is valid AND the user's email matches the admin email
 async function requireOwner(req: any, res: any): Promise<string | null> {
   const auth = getAuth(req);
   if (!auth?.userId) {
     res.status(401).json({ error: "SIGN_IN_REQUIRED" });
     return null;
   }
-  const ownerId = await getOwnerId();
-  if (!ownerId || auth.userId !== ownerId) {
+  try {
+    const user = await clerk().users.getUser(auth.userId);
+    const emails = user.emailAddresses.map(e => e.emailAddress.toLowerCase());
+    if (!emails.includes(ADMIN_EMAIL.toLowerCase())) {
+      res.status(403).json({ error: "OWNER_ONLY" });
+      return null;
+    }
+  } catch (e) {
+    console.error("Failed to verify admin email", e);
     res.status(403).json({ error: "OWNER_ONLY" });
     return null;
   }

@@ -140,13 +140,18 @@ function AdminDashboard() {
       queryKey: ["admin-overview"],
       queryFn: async () => {
         const res = await fetch(`${BASE}/api/admin/overview`, { credentials: "include" });
+        if (res.status === 401) throw Object.assign(new Error("NOT_AUTHED"), { status: 401 });
         if (res.status === 403) throw Object.assign(new Error("OWNER_ONLY"), { status: 403 });
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
       refetchInterval: 60_000,
-      retry: false,
+      retry: 3,
+      retryDelay: 1500,
     });
+
+  const isOwnerDenied = (ovError as any)?.status === 403;
+  const isNotAuthed  = (ovError as any)?.status === 401;
 
   const { data: usersData, isLoading: usersLoading } =
     useQuery<{ users: AdminUser[]; total: number }>({
@@ -156,8 +161,8 @@ function AdminDashboard() {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
-      enabled: !(ovError as any)?.status,
-      retry: false,
+      enabled: !isOwnerDenied && !isNotAuthed && !!overview,
+      retry: 2,
     });
 
   const { data: pages, isLoading: pagesLoading } =
@@ -168,21 +173,40 @@ function AdminDashboard() {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       },
-      enabled: !(ovError as any)?.status,
-      retry: false,
+      enabled: !isOwnerDenied && !isNotAuthed && !!overview,
+      retry: 2,
     });
 
-  const isLoading = ovLoading || usersLoading || pagesLoading;
+  const isLoading = ovLoading || (!!overview && (usersLoading || pagesLoading));
 
   // Not the owner
-  if ((ovError as any)?.status === 403) {
+  if (isOwnerDenied) {
     return (
       <div className="border border-destructive/30 bg-destructive/5 p-12 flex flex-col items-center gap-4 text-center">
         <ShieldCheck className="h-12 w-12 text-destructive/40" />
         <div className="space-y-2">
           <p className="font-mono font-bold text-destructive">ACCESS_DENIED</p>
-          <p className="text-sm text-muted-foreground font-mono">This panel is restricted to the site owner.</p>
+          <p className="text-sm text-muted-foreground font-mono">This panel is restricted to gunjan1982@gmail.com.</p>
         </div>
+      </div>
+    );
+  }
+
+  // Auth not ready yet — happens briefly after page load; retries automatically
+  if (isNotAuthed) {
+    return (
+      <div className="border border-border/40 bg-secondary/10 p-12 flex flex-col items-center gap-4 text-center">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <div className="space-y-2">
+          <p className="font-mono font-bold">ESTABLISHING_SESSION...</p>
+          <p className="text-sm text-muted-foreground font-mono">Waiting for authentication. This refreshes automatically.</p>
+        </div>
+        <button
+          onClick={() => refetchOverview()}
+          className="text-xs font-mono text-primary border border-primary/30 px-4 py-1.5 hover:bg-primary/10 transition-colors"
+        >
+          RETRY_NOW
+        </button>
       </div>
     );
   }
