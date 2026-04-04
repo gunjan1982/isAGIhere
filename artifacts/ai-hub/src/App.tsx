@@ -17,6 +17,7 @@ import AgiTracker from "@/pages/agi-tracker";
 import Learn from "@/pages/learn";
 import MyHub from "@/pages/my-hub";
 import Analytics from "@/pages/analytics";
+import Admin from "@/pages/admin";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ function Router() {
         <Route path="/learn" component={Learn} />
         <Route path="/my-hub" component={MyHub} />
         <Route path="/analytics" component={Analytics} />
+        <Route path="/admin" component={Admin} />
         <Route path="/sign-in/*?" component={SignInPage} />
         <Route path="/sign-up/*?" component={SignUpPage} />
         <Route component={NotFound} />

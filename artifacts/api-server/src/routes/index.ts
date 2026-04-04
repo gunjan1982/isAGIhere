@@ -7,6 +7,7 @@ import statsRouter from "./stats";
 import feedRouter from "./feed";
 import userRouter from "./user";
 import analyticsRouter from "./analytics";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(statsRouter);
 router.use(feedRouter);
 router.use(userRouter);
 router.use(analyticsRouter);
+router.use(adminRouter);
 
 export default router;

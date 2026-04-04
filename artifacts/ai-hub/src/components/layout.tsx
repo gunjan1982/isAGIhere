@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2 } from "lucide-react";
+import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2, ShieldCheck } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { SignupNudge } from "./signup-nudge";
@@ -98,6 +98,14 @@ function UserMenu() {
               >
                 <BarChart2 className="h-3.5 w-3.5" />
                 ANALYTICS
+              </Link>
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-mono text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors border-t border-border/30"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                ADMIN_PANEL
               </Link>
               <button
                 onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }); }}
