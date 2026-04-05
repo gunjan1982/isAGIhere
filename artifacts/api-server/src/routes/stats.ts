@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { peopleTable, sourcesTable, communitiesTable, feedItemsTable } from "@workspace/db/schema";
-import { count, desc, eq } from "drizzle-orm";
+import { count, desc, eq, inArray, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -58,6 +58,64 @@ router.get("/featured", async (_req, res) => {
       .limit(12),
   ]);
 
+  // Top 6 people by feed volume
+  const feedCountsResult = await db
+    .select({
+      personId: feedItemsTable.personId,
+      cnt: count(feedItemsTable.id),
+    })
+    .from(feedItemsTable)
+    .where(sql`${feedItemsTable.personId} IS NOT NULL`)
+    .groupBy(feedItemsTable.personId)
+    .orderBy(desc(count(feedItemsTable.id)))
+    .limit(6);
+
+  const topPersonIds = feedCountsResult
+    .map((r) => r.personId)
+    .filter((id): id is number => id !== null);
+
+  // Fetch recent feed items for those people (top 12 per person)
+  const spotlightFeedItems = topPersonIds.length
+    ? await db
+        .select({
+          id: feedItemsTable.id,
+          personId: feedItemsTable.personId,
+          title: feedItemsTable.title,
+          url: feedItemsTable.url,
+          sourceName: feedItemsTable.sourceName,
+          publishedAt: feedItemsTable.publishedAt,
+          type: feedItemsTable.type,
+        })
+        .from(feedItemsTable)
+        .where(inArray(feedItemsTable.personId, topPersonIds))
+        .orderBy(desc(feedItemsTable.publishedAt))
+        .limit(80)
+    : [];
+
+  // Group feed items by personId
+  const feedByPerson: Record<number, typeof spotlightFeedItems> = {};
+  for (const item of spotlightFeedItems) {
+    if (item.personId) {
+      if (!feedByPerson[item.personId]) feedByPerson[item.personId] = [];
+      if (feedByPerson[item.personId].length < 12) feedByPerson[item.personId].push(item);
+    }
+  }
+
+  // Build spotlight people array ordered by feed count
+  const spotlightPeople = topPersonIds
+    .map((id) => {
+      const person = allPeople.find((p) => p.id === id);
+      if (!person) return null;
+      return {
+        ...person,
+        feedItems: (feedByPerson[id] || []).map((item) => ({
+          ...item,
+          publishedAt: item.publishedAt ? item.publishedAt.toISOString() : null,
+        })),
+      };
+    })
+    .filter(Boolean);
+
   const spotlightPerson = allPeople.find((p) => p.isSpotlight) || allPeople[0] || null;
   const topNewsletters = allSources.filter((s) => s.type === "newsletter" && s.isHighSignal).slice(0, 4);
   const topPodcasts = allSources.filter((s) => s.type === "podcast" && s.isHighSignal).slice(0, 4);
@@ -65,6 +123,7 @@ router.get("/featured", async (_req, res) => {
 
   res.json({
     spotlightPerson,
+    spotlightPeople,
     topNewsletters,
     topPodcasts,
     vibeCodingVoices,

@@ -1,11 +1,10 @@
 import { useGetFeatured, useGetStats } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { VisitorHeatmap } from "@/components/visitor-heatmap";
 
@@ -33,11 +32,164 @@ function formatNumber(num: number) {
   return new Intl.NumberFormat("en-US").format(num);
 }
 
+function timeAgo(isoString: string | null) {
+  if (!isoString) return "";
+  const diff = Date.now() - new Date(isoString).getTime();
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (h < 1) return "just now";
+  if (h < 24) return `${h}h ago`;
+  return `${d}d ago`;
+}
+
+type SpotlightPerson = {
+  id: number;
+  name: string;
+  role: string;
+  organization?: string;
+  category: string;
+  bio?: string;
+  stance?: string;
+  imageUrl?: string;
+  feedItems: Array<{
+    id: number;
+    title: string;
+    url: string;
+    sourceName?: string;
+    publishedAt: string | null;
+  }>;
+};
+
+function PersonCard({ person }: { person: SpotlightPerson }) {
+  const initials = person.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const categoryLabel = person.category.replace(/_/g, " ").toUpperCase();
+
+  const items = person.feedItems;
+  const scrollItems = items.length >= 3 ? [...items, ...items] : items;
+
+  const ITEM_HEIGHT = 68;
+  const tickerHeight = 204;
+  const totalHeight = items.length * ITEM_HEIGHT;
+  const duration = Math.max(12, items.length * 3);
+
+  return (
+    <div className="flex-shrink-0 w-72 border border-border/50 bg-card flex flex-col hover:border-primary/40 transition-colors">
+      {/* Photo / Avatar */}
+      <div className="relative w-full h-40 bg-secondary/60 overflow-hidden flex items-center justify-center">
+        {person.imageUrl ? (
+          <img
+            src={person.imageUrl}
+            alt={person.name}
+            className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              background: "radial-gradient(ellipse at 60% 40%, hsl(43 100% 20% / 0.4) 0%, hsl(240 10% 8%) 70%)",
+            }}
+          >
+            <span
+              className="font-mono font-black text-primary/60 select-none"
+              style={{ fontSize: "4rem", letterSpacing: "-0.05em" }}
+            >
+              {initials}
+            </span>
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <Badge
+            variant="outline"
+            className="font-mono text-[9px] tracking-widest border-primary/40 bg-background/80 backdrop-blur text-primary"
+          >
+            {categoryLabel}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="px-4 pt-3 pb-2">
+        <h3 className="font-bold text-base leading-tight">{person.name}</h3>
+        <p className="text-xs text-muted-foreground font-mono mt-0.5 line-clamp-1">
+          {person.role}
+          {person.organization ? ` · ${person.organization}` : ""}
+        </p>
+      </div>
+
+      {/* Live news ticker */}
+      <div className="mx-4 mb-3 border border-border/40 bg-secondary/20 overflow-hidden flex-1" style={{ height: `${tickerHeight}px` }}>
+        <div className="flex items-center gap-1.5 px-2 py-1 border-b border-border/40 bg-secondary/40">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+          </span>
+          <span className="text-[9px] font-mono text-muted-foreground tracking-widest">LATEST_BYTES</span>
+        </div>
+
+        {scrollItems.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-[10px] font-mono text-muted-foreground/50">
+            NO_SIGNAL
+          </div>
+        ) : (
+          <div
+            className="overflow-hidden"
+            style={{ height: `${tickerHeight - 24}px` }}
+          >
+            <style>{`
+              @keyframes ticker-scroll-${person.id} {
+                0% { transform: translateY(0); }
+                100% { transform: translateY(-${totalHeight}px); }
+              }
+            `}</style>
+            <div
+              style={{
+                animation: `ticker-scroll-${person.id} ${duration}s linear infinite`,
+              }}
+            >
+              {scrollItems.map((item, idx) => (
+                <a
+                  key={`${item.id}-${idx}`}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex flex-col gap-0.5 px-2 py-2 hover:bg-primary/10 transition-colors border-b border-border/20 group"
+                  style={{ height: `${ITEM_HEIGHT}px` }}
+                >
+                  <span className="text-[11px] leading-tight text-foreground/90 line-clamp-2 group-hover:text-primary transition-colors">
+                    {item.title}
+                  </span>
+                  <span className="text-[9px] font-mono text-muted-foreground/60 flex items-center gap-1">
+                    {item.sourceName && <span className="truncate max-w-[100px]">{item.sourceName}</span>}
+                    {item.sourceName && item.publishedAt && <span>·</span>}
+                    {item.publishedAt && <span>{timeAgo(item.publishedAt)}</span>}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Dossier link */}
+      <div className="px-4 pb-4">
+        <Link
+          href={`/people/${person.id}`}
+          className="inline-flex items-center gap-2 text-xs font-mono text-primary hover:text-primary-foreground hover:bg-primary transition-colors border border-primary px-3 py-1.5 w-full justify-center"
+        >
+          ACCESS_DOSSIER <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { data: stats, isLoading: isStatsLoading, isError: isStatsError } = useGetStats();
-  const { data: featured, isLoading: isFeaturedLoading, isError: isFeaturedError } = useGetFeatured();
+  const { data: featured, isLoading: isFeaturedLoading } = useGetFeatured();
+  const spotlightPeople: SpotlightPerson[] = (featured as any)?.spotlightPeople ?? [];
 
   const countdown = useAgiCountdown();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -71,9 +223,7 @@ export default function Home() {
               WEIGHTED_CONSENSUS_AGI_IN
             </div>
 
-            {/* Big clock */}
             <div className="flex items-end gap-1 md:gap-2">
-              {/* Days */}
               <div className="flex flex-col items-center">
                 <span className="font-mono font-black tabular-nums text-primary leading-none"
                   style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
@@ -82,7 +232,6 @@ export default function Home() {
                 <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">DAYS</span>
               </div>
               <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
-              {/* Hours */}
               <div className="flex flex-col items-center">
                 <span className="font-mono font-black tabular-nums text-primary leading-none"
                   style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
@@ -91,7 +240,6 @@ export default function Home() {
                 <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">HRS</span>
               </div>
               <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
-              {/* Mins */}
               <div className="flex flex-col items-center">
                 <span className="font-mono font-black tabular-nums text-primary leading-none"
                   style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
@@ -100,7 +248,6 @@ export default function Home() {
                 <span className="text-[9px] font-mono text-muted-foreground tracking-widest mt-1">MIN</span>
               </div>
               <span className="font-mono font-black text-primary/50 pb-5" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>:</span>
-              {/* Secs */}
               <div className="flex flex-col items-center">
                 <span className="font-mono font-black tabular-nums text-primary leading-none"
                   style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}>
@@ -170,72 +317,40 @@ export default function Home() {
 
       {/* Featured Grid */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Spotlight */}
+
+        {/* People Spotlight — full width on lg */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-border/50 pb-2">
-            <h2 className="text-xl font-bold font-mono text-foreground flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              TARGET_SPOTLIGHT
+          {/* Section header — clicking goes to /people */}
+          <Link href="/people" className="group flex items-center justify-between border-b border-border/50 pb-2 hover:border-primary/30 transition-colors">
+            <h2 className="text-xl font-bold font-mono text-foreground flex items-center gap-2 group-hover:text-primary transition-colors">
+              <Users className="h-5 w-5 text-primary" />
+              PEOPLE
             </h2>
-            <Link href="/people" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-              VIEW_ALL <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          
+            <span className="text-sm font-mono text-muted-foreground group-hover:text-primary transition-colors flex items-center gap-1">
+              VIEW_ALL <ChevronRight className="h-3 w-3" />
+            </span>
+          </Link>
+
           {isFeaturedLoading ? (
-            <Skeleton className="h-64 bg-secondary" />
-          ) : featured?.spotlightPerson ? (
-            <div className="border border-border/50 bg-card p-6 flex flex-col md:flex-row gap-6 hover:border-primary/30 transition-all">
-              <div className="w-full md:w-1/3 flex-shrink-0">
-                <div className="aspect-square bg-secondary border border-border/50 relative overflow-hidden group">
-                  {featured.spotlightPerson.imageUrl ? (
-                    <img 
-                      src={featured.spotlightPerson.imageUrl} 
-                      alt={featured.spotlightPerson.name}
-                      className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-mono text-muted-foreground text-4xl">
-                      {featured.spotlightPerson.name.charAt(0)}
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="outline" className="bg-background/80 backdrop-blur font-mono border-primary/50 text-primary">
-                      {featured.spotlightPerson.category.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col flex-grow justify-between py-2">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-2xl font-bold">{featured.spotlightPerson.name}</h3>
-                    <p className="text-muted-foreground font-mono text-sm">
-                      {featured.spotlightPerson.role} {featured.spotlightPerson.organization ? `@ ${featured.spotlightPerson.organization}` : ""}
-                    </p>
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground/80 line-clamp-3">
-                    {featured.spotlightPerson.bio}
-                  </p>
-                  {featured.spotlightPerson.stance && (
-                    <div className="inline-flex items-center gap-2 text-xs border border-border/50 px-2 py-1 bg-secondary/20">
-                      <span className="text-muted-foreground font-mono">STANCE:</span>
-                      <span className="font-medium text-foreground">{featured.spotlightPerson.stance}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="pt-4 mt-4 border-t border-border/50">
-                  <Link href={`/people/${featured.spotlightPerson.id}`} className="inline-flex items-center gap-2 text-sm font-mono text-primary hover:text-primary-foreground hover:bg-primary transition-colors border border-primary px-4 py-2">
-                    ACCESS_DOSSIER <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
+            <div className="flex gap-4 overflow-hidden">
+              {Array(3).fill(0).map((_, i) => (
+                <Skeleton key={i} className="flex-shrink-0 w-72 h-96 bg-secondary" />
+              ))}
+            </div>
+          ) : spotlightPeople.length > 0 ? (
+            <div
+              ref={scrollRef}
+              className="flex gap-4 overflow-x-auto pb-2"
+              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary)/0.3) transparent" }}
+            >
+              {spotlightPeople.map((person) => (
+                <PersonCard key={person.id} person={person} />
+              ))}
             </div>
           ) : (
-             <div className="border border-border/50 bg-card p-6 text-center font-mono text-muted-foreground">
-               NO_SPOTLIGHT_AVAILABLE
-             </div>
+            <div className="border border-border/50 bg-card p-6 text-center font-mono text-muted-foreground">
+              NO_SIGNAL_DETECTED
+            </div>
           )}
         </div>
 
