@@ -12,6 +12,7 @@ import searchRouter from "./search";
 import commentsRouter from "./comments";
 import submissionsRouter from "./submissions";
 import digestRouter from "./digest";
+import myFeedRouter from "./my-feed";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(searchRouter);
 router.use(commentsRouter);
 router.use(submissionsRouter);
 router.use(digestRouter);
+router.use(myFeedRouter);
 
 export default router;

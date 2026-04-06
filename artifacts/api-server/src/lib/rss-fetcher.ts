@@ -17,16 +17,16 @@ const GOOGLE_NEWS_RSS = (query: string) =>
 
 const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Simon Willison's Weblog", url: "https://simonwillison.net/atom/everything/" },
-  { name: "OpenAI Blog", url: "https://openai.com/index.rss" },
-  { name: "Anthropic Blog", url: "https://www.anthropic.com/blog.rss" },
+  { name: "OpenAI Blog", url: GOOGLE_NEWS_RSS("site:openai.com") },
+  { name: "Anthropic Blog", url: GOOGLE_NEWS_RSS("site:anthropic.com") },
   { name: "Google DeepMind Blog", url: "https://deepmind.google/blog/rss.xml" },
   { name: "Lilian Weng's Blog", url: "https://lilianweng.github.io/index.xml" },
-  { name: "The Batch (DeepLearning.AI)", url: "https://www.deeplearning.ai/the-batch/feed/" },
+  { name: "The Batch (DeepLearning.AI)", url: GOOGLE_NEWS_RSS("deeplearning.ai the batch") },
   { name: "Latent Space", url: "https://www.latent.space/feed" },
-  { name: "The Neuron", url: "https://www.theneurondaily.com/feed" },
+  { name: "The Neuron", url: GOOGLE_NEWS_RSS("the neuron AI newsletter") },
   { name: "AlphaSignal", url: "https://alphasignal.substack.com/feed" },
-  { name: "Ben's Bites", url: "https://bensbites.beehiiv.com/feed" },
-  { name: "TLDR AI", url: "https://tldr.tech/ai/rss" },
+  { name: "Ben's Bites", url: "https://www.bensbites.com/feed" },
+  { name: "TLDR AI", url: "https://tldr.tech/api/rss/ai" },
   { name: "3Blue1Brown", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" },
   // News Websites
   { name: "Google Research Blog", url: "https://research.google/blog/rss" },
@@ -54,7 +54,7 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Ahead of AI (Sebastian Raschka)", url: "https://magazine.sebastianraschka.com/feed" },
   { name: "AI Alignment Forum", url: "https://www.alignmentforum.org/feed.xml" },
   { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml" },
-  { name: "Mistral Blog", url: "https://mistral.ai/news/rss.xml" },
+  { name: "Mistral Blog", url: GOOGLE_NEWS_RSS("site:mistral.ai") },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {

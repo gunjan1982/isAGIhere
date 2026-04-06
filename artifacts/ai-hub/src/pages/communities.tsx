@@ -4,6 +4,7 @@ import { MessageSquare, Filter, ExternalLink, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/components/follow-button";
+import { SuggestSubmission } from "@/components/suggest-submission";
 
 const PLATFORMS = [
   { id: "", label: "ALL" },
@@ -32,6 +33,7 @@ export default function Communities() {
             NODES: Active spaces where builders and researchers coordinate.
           </p>
         </div>
+        <SuggestSubmission defaultType="community" />
       </div>
 
       <div className="flex overflow-x-auto gap-2 pb-2 md:pb-0 scrollbar-hide">

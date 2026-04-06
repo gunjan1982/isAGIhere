@@ -108,6 +108,16 @@ export function useCustomSources() {
   });
 }
 
+export function useMyFeed(limit = 20) {
+  const { isSignedIn } = useUser();
+  return useQuery<{ items: any[]; hasMore: boolean; followedPeople: number }>({
+    queryKey: ["my-feed", limit],
+    queryFn: () => apiFetch(`/api/user/feed?limit=${limit}`),
+    enabled: !!isSignedIn,
+    staleTime: 60_000,
+  });
+}
+
 export function useCustomSourceMutations() {
   const qc = useQueryClient();
 

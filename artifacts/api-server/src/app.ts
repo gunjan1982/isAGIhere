@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
+import sitemapRouter from "./routes/sitemap";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -36,6 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(clerkMiddleware());
 
+app.use(sitemapRouter);
 app.use("/api", router);
 
 export default app;

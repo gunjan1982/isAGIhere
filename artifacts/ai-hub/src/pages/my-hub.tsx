@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
-import { useUserHub, useFollowMutations, useCustomSourceMutations } from "@/lib/useFollows";
+import { useUserHub, useFollowMutations, useCustomSourceMutations, useMyFeed } from "@/lib/useFollows";
 import { AddCustomSourceModal } from "@/components/add-custom-source-modal";
 import {
   LayoutDashboard, Users, Radio, MessageSquare, Plus, Trash2,
-  ExternalLink, Globe, Youtube, Twitter, Loader2, LogIn
+  ExternalLink, Globe, Youtube, Twitter, Loader2, LogIn, Rss, Clock
 } from "lucide-react";
 
 const PLATFORM_ICON: Record<string, any> = {
@@ -25,6 +25,65 @@ function EmptyState({ icon: Icon, message, cta, href }: { icon: any; message: st
         {cta}
       </Link>
     </div>
+  );
+}
+
+function MyFeedSection() {
+  const { data, isLoading } = useMyFeed(20);
+  const items = data?.items ?? [];
+
+  return (
+    <section className="space-y-3">
+      <h2 className="font-mono text-sm font-bold tracking-widest text-primary border-b border-border/40 pb-2 flex items-center justify-between">
+        <span className="flex items-center gap-2"><Rss className="h-4 w-4" /> MY_FEED</span>
+        <span className="text-xs text-muted-foreground font-normal">
+          {data?.followedPeople ? `${data.followedPeople} PEOPLE_TRACKED` : ""}
+        </span>
+      </h2>
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-muted-foreground font-mono text-sm py-6 justify-center">
+          <Loader2 className="h-4 w-4 animate-spin" /> LOADING_FEED...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="border border-dashed border-border/50 p-8 flex flex-col items-center gap-3 text-center">
+          <Rss className="h-8 w-8 text-muted-foreground/30" />
+          <p className="text-sm font-mono text-muted-foreground">
+            {data?.followedPeople === 0
+              ? "Follow some people below to see their latest articles here."
+              : "No recent articles from people you follow yet."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item: any) => (
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 border border-border/50 bg-card p-3 hover:border-primary/40 hover:bg-primary/5 transition-colors group"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-sm font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                  {item.title}
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground mt-0.5">
+                  <span className="uppercase tracking-wider">{item.sourceName}</span>
+                  {item.publishedAt && (
+                    <>
+                      <span>·</span>
+                      <Clock className="h-2.5 w-2.5" />
+                      <span>{new Date(item.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary shrink-0 hidden sm:block" />
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -76,6 +135,9 @@ function HubContent() {
           </div>
         </div>
       )}
+
+      {/* Personalised Feed */}
+      {(hub?.people.length ?? 0) > 0 && <MyFeedSection />}
 
       {/* People */}
       <section className="space-y-3">
