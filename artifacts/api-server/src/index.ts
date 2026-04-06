@@ -17,7 +17,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+const REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 app.listen(port, (err) => {
   if (err) {
