@@ -3,8 +3,10 @@ import { useUser, Show } from "@clerk/react";
 import { Link } from "wouter";
 import {
   ShieldCheck, Users, Eye, TrendingUp, LogIn, Loader2,
-  Calendar, UserCheck, BarChart2, Activity, RefreshCw, ExternalLink
+  Calendar, UserCheck, BarChart2, Activity, RefreshCw, ExternalLink,
+  Inbox, CheckCircle, XCircle
 } from "lucide-react";
+import { useState } from "react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -385,7 +387,102 @@ function AdminDashboard() {
         </section>
       )}
 
+      {/* ── Submissions ── */}
+      <SubmissionsPanel />
+
     </div>
+  );
+}
+
+function SubmissionsPanel() {
+  const { data: submissions, refetch, isLoading } = useQuery({
+    queryKey: ["admin-submissions"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/submissions`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json() as Promise<Array<{ id: number; type: string; name: string; url?: string; description?: string; submitterEmail?: string; status: string; createdAt: string }>>;
+    },
+  });
+  const [updating, setUpdating] = useState<number | null>(null);
+
+  async function update(id: number, status: "approved" | "rejected") {
+    setUpdating(id);
+    try {
+      await fetch(`${BASE}/api/submissions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+      await refetch();
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  const pending = submissions?.filter(s => s.status === "pending") ?? [];
+  const rest = submissions?.filter(s => s.status !== "pending") ?? [];
+
+  return (
+    <section className="space-y-4">
+      <h2 className="font-mono text-xs font-bold tracking-widest text-primary border-b border-border/40 pb-1 flex items-center gap-2">
+        <Inbox className="h-3.5 w-3.5" /> SUBMISSIONS
+        {pending.length > 0 && (
+          <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 font-mono font-bold">
+            {pending.length} PENDING
+          </span>
+        )}
+      </h2>
+
+      {isLoading ? (
+        <p className="text-xs font-mono text-muted-foreground animate-pulse">Loading...</p>
+      ) : pending.length === 0 && rest.length === 0 ? (
+        <p className="text-xs font-mono text-muted-foreground border border-border/30 p-4 text-center">No submissions yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {[...pending, ...rest].map(s => (
+            <div key={s.id} className={`border p-3 flex flex-col gap-1 ${s.status === "pending" ? "border-primary/30 bg-primary/5" : s.status === "approved" ? "border-green-500/20 bg-green-500/5" : "border-border/30 bg-secondary/10 opacity-60"}`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono uppercase border border-border/50 px-1.5 py-0.5 text-muted-foreground">{s.type}</span>
+                  <span className="font-bold text-sm">{s.name}</span>
+                  {s.url && (
+                    <a href={s.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+                {s.status === "pending" && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => update(s.id, "approved")}
+                      disabled={updating === s.id}
+                      className="flex items-center gap-1 text-[10px] font-mono text-green-400 hover:text-green-300 border border-green-500/30 hover:border-green-500/60 px-2 py-1 transition-colors disabled:opacity-40"
+                    >
+                      <CheckCircle className="h-3 w-3" /> APPROVE
+                    </button>
+                    <button
+                      onClick={() => update(s.id, "rejected")}
+                      disabled={updating === s.id}
+                      className="flex items-center gap-1 text-[10px] font-mono text-destructive/80 hover:text-destructive border border-destructive/30 hover:border-destructive/60 px-2 py-1 transition-colors disabled:opacity-40"
+                    >
+                      <XCircle className="h-3 w-3" /> REJECT
+                    </button>
+                  </div>
+                )}
+                {s.status !== "pending" && (
+                  <span className={`text-[9px] font-mono uppercase px-1.5 py-0.5 ${s.status === "approved" ? "text-green-400 border border-green-500/30" : "text-muted-foreground border border-border/30"}`}>
+                    {s.status}
+                  </span>
+                )}
+              </div>
+              {s.description && <p className="text-xs text-muted-foreground">{s.description}</p>}
+              {s.submitterEmail && <p className="text-[10px] font-mono text-muted-foreground/60">from: {s.submitterEmail}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

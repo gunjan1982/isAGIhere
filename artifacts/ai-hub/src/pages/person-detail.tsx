@@ -5,6 +5,8 @@ import { ArrowLeft, ExternalLink, Twitter, Target, Building2, TerminalSquare, Ac
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
+import { CommentSection } from "@/components/comment-section";
+import { useSeo } from "@/lib/useSeo";
 
 export default function PersonDetail() {
   const [, params] = useRoute("/people/:id");
@@ -16,6 +18,13 @@ export default function PersonDetail() {
 
   const { data: feedData, isLoading: isFeedLoading } = useGetPersonFeed(id, { limit: 15 }, {
     query: { enabled: !!id, queryKey: [`/api/people/${id}/feed`, { limit: 15 }] }
+  });
+
+  useSeo({
+    title: person?.name || "Person Profile",
+    description: person?.bio || (person ? `${person.role}${person.organization ? ` at ${person.organization}` : ""} — tracked on AI Water Cooler` : undefined),
+    image: person?.imageUrl || undefined,
+    type: "profile",
   });
 
   if (isLoading) {
@@ -194,6 +203,8 @@ export default function PersonDetail() {
         </div>
 
       </div>
+
+      <CommentSection entityType="person" entityId={person.id} />
     </div>
   );
 }

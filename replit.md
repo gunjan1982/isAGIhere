@@ -22,10 +22,15 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ### `artifacts/ai-hub` — AI Industry Hub (primary web app)
 React + Vite frontend deployed at `/`. Dark terminal aesthetic with electric amber accents.
 Tracks people, newsletters, blogs, podcasts, YouTube channels, and communities in the AI industry.
-Pages: Home (`/`), People (`/people`), Person Detail (`/people/:id`), Sources (`/sources`), Communities (`/communities`), Feed (`/feed`).
+Pages: Home (`/`), People (`/people`), Person Detail (`/people/:id`), Sources (`/sources`), Communities (`/communities`), Feed (`/feed`), Learn (`/learn`), AGI Tracker (`/agi`), My Hub (`/my-hub`), Analytics (`/analytics`), Search (`/search`), Admin (`/admin`).
+- **Search**: Full-text search across people, sources, communities, and news feed
+- **Comments**: Anonymous commenting on person profiles (name+email only, no account needed) with threaded replies
+- **Submissions**: Community can suggest people/sources/communities for review via "SUGGEST_" buttons on people/sources pages
+- **SEO**: `useSeo` hook for per-page title + OG meta tags on key pages
+- **Admin**: `/admin` panel includes submissions review with approve/reject
 
 ### `artifacts/api-server` — Express API
-Serves at `/api`. Routes: `/healthz`, `/people`, `/people/:id`, `/sources`, `/communities`, `/stats`, `/featured`, `/feed`, `/feed/refresh`, `/people/:id/feed`.
+Serves at `/api`. Routes: `/healthz`, `/people`, `/people/:id`, `/sources`, `/communities`, `/stats`, `/featured`, `/feed`, `/feed/refresh`, `/people/:id/feed`, `/search`, `/comments`, `/submissions`.
 
 ## Live Feed System
 

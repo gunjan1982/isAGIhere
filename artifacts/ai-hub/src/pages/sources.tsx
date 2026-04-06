@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/components/follow-button";
+import { SuggestSubmission } from "@/components/suggest-submission";
 
 const SOURCE_TYPES = [
   { id: "", label: "ALL" },
@@ -37,6 +38,7 @@ export default function Sources() {
             FEEDS: Curated list of high-signal inputs. Newsletters, podcasts, and research blogs.
           </p>
         </div>
+        <SuggestSubmission defaultType="source" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">

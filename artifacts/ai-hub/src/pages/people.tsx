@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FollowButton } from "@/components/follow-button";
+import { SuggestSubmission } from "@/components/suggest-submission";
 
 const CATEGORIES = [
   { id: "", label: "ALL" },
@@ -39,6 +40,7 @@ export default function People() {
             DATABASE: Key figures driving AI progress. Filter by operational domain.
           </p>
         </div>
+        <SuggestSubmission defaultType="person" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">

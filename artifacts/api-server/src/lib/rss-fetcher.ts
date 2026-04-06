@@ -42,6 +42,19 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "AWS Machine Learning Blog", url: "https://aws.amazon.com/blogs/machine-learning/feed/" },
   { name: "MIRI Blog", url: "https://intelligence.org/feed/" },
   { name: "O'Reilly AI & ML", url: "https://www.oreilly.com/radar/topics/ai-ml/feed/index.xml" },
+  // Expanded sources
+  { name: "VentureBeat AI", url: "https://venturebeat.com/category/ai/feed/" },
+  { name: "MIT Technology Review - AI", url: "https://www.technologyreview.com/feed/" },
+  { name: "IEEE Spectrum - AI", url: "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss" },
+  { name: "Import AI (Jack Clark)", url: "https://jack-clark.net/feed/" },
+  { name: "Interconnects (Nathan Lambert)", url: "https://www.interconnects.ai/feed" },
+  { name: "One Useful Thing (Ethan Mollick)", url: "https://www.oneusefulthing.org/feed" },
+  { name: "Gary Marcus Substack", url: "https://garymarcus.substack.com/feed" },
+  { name: "Stratechery", url: "https://stratechery.com/feed/" },
+  { name: "Ahead of AI (Sebastian Raschka)", url: "https://magazine.sebastianraschka.com/feed" },
+  { name: "AI Alignment Forum", url: "https://www.alignmentforum.org/feed.xml" },
+  { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml" },
+  { name: "Mistral Blog", url: "https://mistral.ai/news/rss.xml" },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {

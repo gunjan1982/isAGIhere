@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2, ShieldCheck } from "lucide-react";
+import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2, ShieldCheck, Search } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { SignupNudge } from "./signup-nudge";
@@ -182,6 +182,13 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
           
           <div className="flex items-center gap-2">
+            <Link
+              href="/search"
+              className="flex items-center justify-center w-8 h-8 border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+              title="Search"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </Link>
             <Link
               href="/agi"
               className="group flex items-center gap-2 border border-primary/40 bg-primary/5 hover:bg-primary/15 hover:border-primary/70 px-3 py-1.5 transition-all"
