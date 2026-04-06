@@ -54,6 +54,11 @@ function MiniBar({ value, max, label }: { value: number; max: number; label: str
   );
 }
 
+function fmtVal(n: number) {
+  if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
+  return String(n);
+}
+
 function SparkLine({ daily }: { daily: AnalyticsStats["daily"] }) {
   if (!daily || daily.length === 0) return null;
   const vals = daily.map(d => Number(d.views));
@@ -61,11 +66,18 @@ function SparkLine({ daily }: { daily: AnalyticsStats["daily"] }) {
   const W = 600;
   const H = 80;
   const padX = 8;
+
   const pts = vals.map((v, i) => {
     const x = padX + (i / Math.max(vals.length - 1, 1)) * (W - padX * 2);
     const y = H - 4 - ((v / max) * (H - 16));
     return `${x},${y}`;
   }).join(" ");
+
+  // Y-axis tick fractions and their % position from top within the SVG viewBox
+  const yTicks = [1, 0.75, 0.5, 0.25, 0].map(f => ({
+    label: f === 0 ? "0" : fmtVal(Math.round(f * max)),
+    topPct: ((H - 4 - f * (H - 16)) / H) * 100,
+  }));
 
   return (
     <div className="space-y-3">
@@ -74,34 +86,47 @@ function SparkLine({ daily }: { daily: AnalyticsStats["daily"] }) {
         <span className="text-[10px] font-mono text-muted-foreground">{daily[0]?.day} → {daily[daily.length - 1]?.day}</span>
       </div>
       <div className="border border-border/30 bg-secondary/10 p-4 overflow-hidden">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
-          {/* Grid lines */}
-          {[0.25, 0.5, 0.75].map(f => (
-            <line key={f} x1={0} y1={H - 4 - f * (H - 16)} x2={W} y2={H - 4 - f * (H - 16)}
-              stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />
-          ))}
-          {/* Area fill */}
-          <polygon
-            points={`${padX},${H} ${pts} ${W - padX},${H}`}
-            fill="hsl(var(--primary))"
-            fillOpacity="0.12"
-          />
-          {/* Line */}
-          <polyline points={pts} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinejoin="round" />
-          {/* Dots */}
-          {vals.map((v, i) => {
-            const x = padX + (i / Math.max(vals.length - 1, 1)) * (W - padX * 2);
-            const y = H - 4 - ((v / max) * (H - 16));
-            return <circle key={i} cx={x} cy={y} r="3" fill="hsl(var(--primary))" />;
-          })}
-        </svg>
-        {/* X axis labels */}
-        <div className="flex justify-between mt-1 px-1">
-          {[daily[0], daily[Math.floor(daily.length / 2)], daily[daily.length - 1]].filter(Boolean).map((d, i) => (
-            <span key={i} className="text-[9px] font-mono text-muted-foreground">
-              {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-            </span>
-          ))}
+        <div className="flex gap-2 items-stretch">
+          {/* Y-axis labels */}
+          <div className="relative shrink-0 w-7" style={{ height: H }}>
+            {yTicks.map(({ label, topPct }) => (
+              <span
+                key={label}
+                className="absolute right-0 text-[8px] font-mono text-muted-foreground/60 -translate-y-1/2 tabular-nums"
+                style={{ top: `${topPct}%` }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+          {/* Chart */}
+          <div className="flex-1 min-w-0">
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} preserveAspectRatio="none">
+              {[0.25, 0.5, 0.75].map(f => (
+                <line key={f} x1={0} y1={H - 4 - f * (H - 16)} x2={W} y2={H - 4 - f * (H - 16)}
+                  stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />
+              ))}
+              <polygon
+                points={`${padX},${H} ${pts} ${W - padX},${H}`}
+                fill="hsl(var(--primary))"
+                fillOpacity="0.12"
+              />
+              <polyline points={pts} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinejoin="round" />
+              {vals.map((v, i) => {
+                const x = padX + (i / Math.max(vals.length - 1, 1)) * (W - padX * 2);
+                const y = H - 4 - ((v / max) * (H - 16));
+                return <circle key={i} cx={x} cy={y} r="3" fill="hsl(var(--primary))" />;
+              })}
+            </svg>
+            {/* X axis labels */}
+            <div className="flex justify-between mt-1 px-1">
+              {[daily[0], daily[Math.floor(daily.length / 2)], daily[daily.length - 1]].filter(Boolean).map((d, i) => (
+                <span key={i} className="text-[9px] font-mono text-muted-foreground">
+                  {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
