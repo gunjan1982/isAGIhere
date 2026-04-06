@@ -1,5 +1,6 @@
 import { db } from "@workspace/db";
 import { peopleTable, sourcesTable, communitiesTable } from "@workspace/db/schema";
+import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 
 const people = [
@@ -130,12 +131,27 @@ export async function seedIfEmpty() {
 }
 
 export async function updateSeedData() {
-  const existingPeople = await db.select({ name: peopleTable.name }).from(peopleTable);
+  const existingPeople = await db.select({ id: peopleTable.id, name: peopleTable.name, imageUrl: peopleTable.imageUrl }).from(peopleTable);
   const existingNames = new Set(existingPeople.map((p) => p.name));
   const newPeople = people.filter((p) => !existingNames.has(p.name));
   if (newPeople.length > 0) {
     await db.insert(peopleTable).values(newPeople);
     logger.info({ count: newPeople.length, names: newPeople.map((p) => p.name) }, "Added new people");
+  }
+
+  // Patch imageUrl for existing people whose URL is missing or uses old /twitter/ path
+  const seedByName = Object.fromEntries(people.map((p) => [p.name, p]));
+  const toUpdate = existingPeople.filter((p) => {
+    const seed = seedByName[p.name];
+    if (!seed?.imageUrl) return false;
+    return !p.imageUrl || p.imageUrl.includes("/twitter/");
+  });
+  for (const p of toUpdate) {
+    const seed = seedByName[p.name]!;
+    await db.update(peopleTable).set({ imageUrl: seed.imageUrl }).where(eq(peopleTable.id, p.id));
+  }
+  if (toUpdate.length > 0) {
+    logger.info({ count: toUpdate.length, names: toUpdate.map((p) => p.name) }, "Patched imageUrl for existing people");
   }
 
   const existingSources = await db.select({ name: sourcesTable.name }).from(sourcesTable);
