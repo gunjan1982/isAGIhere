@@ -89,7 +89,7 @@ router.get("/featured", async (_req, res) => {
         .from(feedItemsTable)
         .where(inArray(feedItemsTable.personId, topPersonIds))
         .orderBy(desc(feedItemsTable.publishedAt))
-        .limit(80)
+        .limit(200)
     : [];
 
   // Group feed items by personId
@@ -101,18 +101,17 @@ router.get("/featured", async (_req, res) => {
     }
   }
 
-  // Build spotlight people array ordered by feed count
+  // Build spotlight people array — only include those with recent feed items
   const spotlightPeople = topPersonIds
     .map((id) => {
       const person = allPeople.find((p) => p.id === id);
       if (!person) return null;
-      return {
-        ...person,
-        feedItems: (feedByPerson[id] || []).map((item) => ({
-          ...item,
-          publishedAt: item.publishedAt ? item.publishedAt.toISOString() : null,
-        })),
-      };
+      const items = (feedByPerson[id] || []).map((item) => ({
+        ...item,
+        publishedAt: item.publishedAt ? item.publishedAt.toISOString() : null,
+      }));
+      if (items.length === 0) return null; // Skip people with no activity
+      return { ...person, feedItems: items };
     })
     .filter(Boolean);
 

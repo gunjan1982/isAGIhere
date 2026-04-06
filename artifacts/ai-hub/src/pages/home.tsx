@@ -81,6 +81,7 @@ function PersonCard({ person }: { person: SpotlightPerson }) {
             src={person.imageUrl}
             alt={person.name}
             className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         ) : (
           <div
