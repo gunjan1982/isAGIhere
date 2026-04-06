@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { commentsTable } from "@workspace/db/schema";
+import { commentsTable, peopleTable } from "@workspace/db/schema";
 import { eq, and, asc } from "drizzle-orm";
+import { sendReplyNotification } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -65,6 +66,42 @@ router.post("/comments", async (req, res) => {
       .returning();
 
     res.status(201).json({ ...comment, createdAt: comment.createdAt.toISOString() });
+
+    // Fire-and-forget: notify parent comment author if this is a reply
+    if (parentId) {
+      try {
+        const [parent] = await db
+          .select()
+          .from(commentsTable)
+          .where(eq(commentsTable.id, Number(parentId)));
+
+        // Don't notify if replying to yourself
+        if (parent && parent.authorEmail !== comment.authorEmail) {
+          // Resolve entity name
+          let entityName = `${entityType} #${entityId}`;
+          if (entityType === "person") {
+            const [person] = await db
+              .select({ name: peopleTable.name })
+              .from(peopleTable)
+              .where(eq(peopleTable.id, Number(entityId)));
+            if (person) entityName = person.name;
+          }
+
+          await sendReplyNotification({
+            toEmail: parent.authorEmail,
+            toName: parent.authorName,
+            replierName: comment.authorName,
+            replyContent: comment.content,
+            originalContent: parent.content,
+            entityType,
+            entityId: Number(entityId),
+            entityName,
+          });
+        }
+      } catch {
+        // Email failures are silent — don't break the comment flow
+      }
+    }
   } catch {
     res.status(500).json({ error: "Failed to post comment" });
   }

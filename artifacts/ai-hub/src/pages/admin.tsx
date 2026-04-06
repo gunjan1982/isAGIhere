@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import {
   ShieldCheck, Users, Eye, TrendingUp, LogIn, Loader2,
   Calendar, UserCheck, BarChart2, Activity, RefreshCw, ExternalLink,
-  Inbox, CheckCircle, XCircle
+  Inbox, CheckCircle, XCircle, Mail, Send, FlaskConical
 } from "lucide-react";
 import { useState } from "react";
 
@@ -387,10 +387,108 @@ function AdminDashboard() {
         </section>
       )}
 
+      {/* ── Weekly Digest ── */}
+      <DigestPanel />
+
       {/* ── Submissions ── */}
       <SubmissionsPanel />
 
     </div>
+  );
+}
+
+function DigestPanel() {
+  const [sending, setSending] = useState<"test" | "all" | null>(null);
+  const [result, setResult] = useState<{ sent?: number; errors?: number; total?: number; to?: string; message?: string } | null>(null);
+  const [error, setError] = useState("");
+
+  const { data: preview } = useQuery({
+    queryKey: ["digest-preview"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/digest/preview`, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  async function send(type: "test" | "all") {
+    setSending(type);
+    setResult(null);
+    setError("");
+    try {
+      const res = await fetch(`${BASE}/api/digest/send${type === "test" ? "-test" : ""}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Failed"); return; }
+      setResult(data);
+    } catch {
+      setError("Network error");
+    } finally {
+      setSending(null);
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <h2 className="font-mono text-xs font-bold tracking-widest text-primary border-b border-border/40 pb-1 flex items-center gap-2">
+        <Mail className="h-3.5 w-3.5" /> WEEKLY_DIGEST
+      </h2>
+
+      {preview && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="border border-border/50 bg-card p-3 text-center space-y-1">
+            <p className="text-xl font-bold font-mono text-primary">{preview.stats?.totalStories ?? 0}</p>
+            <p className="text-[9px] font-mono text-muted-foreground tracking-wider">STORIES_THIS_WEEK</p>
+          </div>
+          <div className="border border-border/50 bg-card p-3 text-center space-y-1">
+            <p className="text-xl font-bold font-mono text-primary">{preview.stats?.sourcesActive ?? 0}</p>
+            <p className="text-[9px] font-mono text-muted-foreground tracking-wider">SOURCES_ACTIVE</p>
+          </div>
+          <div className="border border-border/50 bg-card p-3 text-center space-y-1">
+            <p className="text-xl font-bold font-mono text-primary">{preview.topStories?.length ?? 0}</p>
+            <p className="text-[9px] font-mono text-muted-foreground tracking-wider">TOP_STORIES</p>
+          </div>
+        </div>
+      )}
+
+      {preview?.weekLabel && (
+        <p className="text-xs font-mono text-muted-foreground">
+          Digest period: <span className="text-foreground">{preview.weekLabel}</span>
+        </p>
+      )}
+
+      {result && (
+        <div className="border border-green-500/30 bg-green-500/5 p-3 text-xs font-mono text-green-400 space-y-1">
+          <p>✓ DIGEST_SENT</p>
+          {result.sent !== undefined && <p>Sent: {result.sent} · Errors: {result.errors ?? 0} · Total subscribers: {result.total ?? result.sent}</p>}
+          {result.to && <p>Test sent to: {result.to}</p>}
+          {result.message && <p>{result.message}</p>}
+        </div>
+      )}
+      {error && <p className="text-xs font-mono text-destructive">{error}</p>}
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => send("test")}
+          disabled={!!sending}
+          className="flex items-center gap-1.5 text-xs font-mono border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-primary px-3 py-2 transition-colors disabled:opacity-40"
+        >
+          {sending === "test" ? <Loader2 className="h-3 w-3 animate-spin" /> : <FlaskConical className="h-3 w-3" />}
+          SEND_TEST_TO_ME
+        </button>
+        <button
+          onClick={() => send("all")}
+          disabled={!!sending}
+          className="flex items-center gap-1.5 text-xs font-mono bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 transition-colors disabled:opacity-40"
+        >
+          {sending === "all" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+          SEND_TO_ALL_FOLLOWERS
+        </button>
+      </div>
+      <p className="text-[10px] font-mono text-muted-foreground/60">Digest is sent to all users who follow at least one person or source</p>
+    </section>
   );
 }
 

@@ -11,6 +11,7 @@ import adminRouter from "./admin";
 import searchRouter from "./search";
 import commentsRouter from "./comments";
 import submissionsRouter from "./submissions";
+import digestRouter from "./digest";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(adminRouter);
 router.use(searchRouter);
 router.use(commentsRouter);
 router.use(submissionsRouter);
+router.use(digestRouter);
 
 export default router;
