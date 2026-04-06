@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useListPeople } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Search, Users, ExternalLink, Filter } from "lucide-react";
+import { Search, Users, ExternalLink, Filter, Flame } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,11 +17,12 @@ const CATEGORIES = [
   { id: "vibe_coders", label: "VIBE_CODERS" }
 ];
 
+const HOT_THRESHOLD = 3;
+
 export default function People() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   
-  // Use debounced search value in real app, but for fast UI we'll pass direct
   const { data: people, isLoading, isError } = useListPeople({ 
     search: search || undefined, 
     category: category || undefined 
@@ -76,7 +77,7 @@ export default function People() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           Array(6).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-64 bg-secondary" />
+            <Skeleton key={i} className="h-80 bg-secondary" />
           ))
         ) : isError ? (
           <div className="col-span-full border border-destructive/30 bg-destructive/10 text-destructive p-4 font-mono">
@@ -88,63 +89,99 @@ export default function People() {
             NO_MATCHING_RECORDS_FOUND
           </div>
         ) : (
-          people?.map((person, i) => (
-            <div 
-              key={person.id} 
-              className="group border border-border/50 bg-card flex flex-col hover:border-primary/50 transition-all duration-300 animate-in fade-in zoom-in-95"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="p-5 flex-grow space-y-4">
-                <div className="flex justify-between items-start gap-4">
+          people?.map((person: any, i: number) => {
+            const isHot = (person.recentItemCount ?? 0) >= HOT_THRESHOLD;
+            const initials = person.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+
+            return (
+              <div 
+                key={person.id} 
+                className="group border border-border/50 bg-card flex flex-col hover:border-primary/50 transition-all duration-300 animate-in fade-in zoom-in-95"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                {/* Headshot */}
+                <Link href={`/people/${person.id}`} className="relative w-full h-40 bg-secondary/60 overflow-hidden flex items-center justify-center block flex-shrink-0">
+                  {person.imageUrl ? (
+                    <img
+                      src={person.imageUrl}
+                      alt={person.name}
+                      className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{ background: "radial-gradient(ellipse at 60% 40%, hsl(43 100% 20% / 0.4) 0%, hsl(240 10% 8%) 70%)" }}
+                    >
+                      <span className="font-mono font-black text-primary/60 select-none" style={{ fontSize: "3.5rem" }}>
+                        {initials}
+                      </span>
+                    </div>
+                  )}
+                  {/* Category badge */}
+                  <div className="absolute top-2 left-2">
+                    <Badge variant="outline" className="font-mono text-[9px] uppercase rounded-none border-primary/40 bg-background/80 backdrop-blur text-primary">
+                      {person.category.replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  {/* Hot badge */}
+                  {isHot && (
+                    <div className="absolute top-2 right-2">
+                      <span className="flex items-center gap-1 font-mono text-[9px] bg-orange-500/90 text-white px-1.5 py-0.5 backdrop-blur">
+                        <Flame className="h-2.5 w-2.5" />
+                        HOT_WEEK
+                      </span>
+                    </div>
+                  )}
+                </Link>
+
+                <div className="p-5 flex-grow space-y-3">
                   <div>
-                    <h3 className="text-xl font-bold font-mono tracking-tight group-hover:text-primary transition-colors">
+                    <h3 className="text-lg font-bold font-mono tracking-tight group-hover:text-primary transition-colors leading-tight">
                       <Link href={`/people/${person.id}`}>{person.name}</Link>
                     </h3>
-                    <p className="text-sm text-muted-foreground font-mono mt-1">
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">
                       {person.role} {person.organization ? `// ${person.organization}` : ""}
                     </p>
                   </div>
-                  <Badge variant="outline" className="font-mono text-[10px] uppercase rounded-none border-border/50 shrink-0">
-                    {person.category.replace('_', ' ')}
-                  </Badge>
+                  
+                  <p className="text-sm text-foreground/70 line-clamp-2 leading-relaxed">
+                    {person.bio || "No biography available."}
+                  </p>
+
+                  {person.bestFor && (
+                    <div className="bg-secondary/20 p-2.5 border-l-2 border-primary/50">
+                      <p className="text-[10px] font-mono text-muted-foreground mb-0.5">OPTIMIZED_FOR:</p>
+                      <p className="text-xs text-foreground line-clamp-2">{person.bestFor}</p>
+                    </div>
+                  )}
                 </div>
                 
-                <p className="text-sm text-foreground/70 line-clamp-3 leading-relaxed">
-                  {person.bio || "No biography available."}
-                </p>
-
-                {person.bestFor && (
-                  <div className="bg-secondary/20 p-3 border-l-2 border-primary/50">
-                    <p className="text-xs font-mono text-muted-foreground mb-1">OPTIMIZED_FOR:</p>
-                    <p className="text-sm text-foreground">{person.bestFor}</p>
+                <div className="border-t border-border/50 p-4 bg-secondary/10 flex justify-between items-center">
+                  <div className="flex gap-3 items-center">
+                    {person.twitterHandle && (
+                      <a 
+                        href={`https://x.com/${person.twitterHandle}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        @{person.twitterHandle}
+                      </a>
+                    )}
+                    <FollowButton entityType="person" entityId={person.id} />
                   </div>
-                )}
-              </div>
-              
-              <div className="border-t border-border/50 p-4 bg-secondary/10 flex justify-between items-center">
-                <div className="flex gap-3 items-center">
-                  {person.twitterHandle && (
-                    <a 
-                      href={`https://x.com/${person.twitterHandle}`} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      @{person.twitterHandle}
-                    </a>
-                  )}
-                  <FollowButton entityType="person" entityId={person.id} />
+                  <Link 
+                    href={`/people/${person.id}`}
+                    className="text-xs font-mono text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    [DOSSIER →]
+                  </Link>
                 </div>
-                <Link 
-                  href={`/people/${person.id}`}
-                  className="text-xs font-mono text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  [VIEW_DOSSIER]
-                </Link>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

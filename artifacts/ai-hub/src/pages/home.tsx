@@ -342,7 +342,7 @@ export default function Home() {
             <div
               ref={scrollRef}
               className="flex gap-4 overflow-x-auto pb-2"
-              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary)/0.3) transparent" }}
+              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary)/0.3) transparent", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
             >
               {spotlightPeople.map((person) => (
                 <PersonCard key={person.id} person={person} />

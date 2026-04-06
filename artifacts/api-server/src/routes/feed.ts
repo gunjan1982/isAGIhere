@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { feedItemsTable, peopleTable } from "@workspace/db/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, isNull, isNotNull, and, SQL } from "drizzle-orm";
 import { GetFeedQueryParams } from "@workspace/api-zod";
 import { refreshFeeds } from "../lib/rss-fetcher";
 
@@ -12,8 +12,16 @@ router.get("/feed", async (req, res) => {
   const limit = Math.min(parsed.success && parsed.data.limit ? parsed.data.limit : 30, 100);
   const offset = parsed.success && parsed.data.offset ? parsed.data.offset : 0;
   const personId = parsed.success && parsed.data.personId ? parsed.data.personId : undefined;
+  const feedFilter = req.query.filter as string | undefined;
 
-  const where = personId ? eq(feedItemsTable.personId, personId) : undefined;
+  let where: SQL | undefined;
+  if (personId) {
+    where = eq(feedItemsTable.personId, personId);
+  } else if (feedFilter === "people") {
+    where = isNotNull(feedItemsTable.personId);
+  } else if (feedFilter === "sources") {
+    where = isNull(feedItemsTable.personId);
+  }
 
   const [items, [{ value: total }]] = await Promise.all([
     db
