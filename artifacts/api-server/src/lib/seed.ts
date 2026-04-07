@@ -139,16 +139,25 @@ export async function updateSeedData() {
     logger.info({ count: newPeople.length, names: newPeople.map((p) => p.name) }, "Added new people");
   }
 
-  // Patch imageUrl for existing people whose URL is missing or uses old /twitter/ path
+  // Patch imageUrl for existing people whose URL is missing or uses old /twitter/ path.
+  // Fall back to building unavatar URL from twitterHandle if seed doesn't explicitly set imageUrl.
   const seedByName = Object.fromEntries(people.map((p) => [p.name, p]));
+  const resolveImageUrl = (seed: (typeof people)[number]) =>
+    seed.imageUrl ?? (seed.twitterHandle ? `https://unavatar.io/x/${seed.twitterHandle}` : null);
+
   const toUpdate = existingPeople.filter((p) => {
     const seed = seedByName[p.name];
-    if (!seed?.imageUrl) return false;
+    if (!seed) return false;
+    const target = resolveImageUrl(seed);
+    if (!target) return false;
     return !p.imageUrl || p.imageUrl.includes("/twitter/");
   });
   for (const p of toUpdate) {
     const seed = seedByName[p.name]!;
-    await db.update(peopleTable).set({ imageUrl: seed.imageUrl }).where(eq(peopleTable.id, p.id));
+    const imageUrl = resolveImageUrl(seed);
+    if (imageUrl) {
+      await db.update(peopleTable).set({ imageUrl }).where(eq(peopleTable.id, p.id));
+    }
   }
   if (toUpdate.length > 0) {
     logger.info({ count: toUpdate.length, names: toUpdate.map((p) => p.name) }, "Patched imageUrl for existing people");

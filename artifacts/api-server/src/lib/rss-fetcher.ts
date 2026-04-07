@@ -12,18 +12,18 @@ const parser = new Parser({
   },
 });
 
-const GOOGLE_NEWS_RSS = (query: string) =>
-  `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+const BING_NEWS_RSS = (query: string) =>
+  `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=RSS`;
 
 const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Simon Willison's Weblog", url: "https://simonwillison.net/atom/everything/" },
-  { name: "OpenAI Blog", url: GOOGLE_NEWS_RSS("site:openai.com") },
-  { name: "Anthropic Blog", url: GOOGLE_NEWS_RSS("site:anthropic.com") },
+  { name: "OpenAI Blog", url: "https://openai.com/news/rss.xml" },
+  { name: "Anthropic Blog", url: BING_NEWS_RSS("site:anthropic.com AI research") },
   { name: "Google DeepMind Blog", url: "https://deepmind.google/blog/rss.xml" },
   { name: "Lilian Weng's Blog", url: "https://lilianweng.github.io/index.xml" },
-  { name: "The Batch (DeepLearning.AI)", url: GOOGLE_NEWS_RSS("deeplearning.ai the batch") },
+  { name: "The Batch (DeepLearning.AI)", url: BING_NEWS_RSS("deeplearning.ai \"the batch\" newsletter") },
   { name: "Latent Space", url: "https://www.latent.space/feed" },
-  { name: "The Neuron", url: GOOGLE_NEWS_RSS("the neuron AI newsletter") },
+  { name: "The Neuron", url: BING_NEWS_RSS("\"The Neuron\" AI newsletter daily") },
   { name: "AlphaSignal", url: "https://alphasignal.substack.com/feed" },
   { name: "Ben's Bites", url: "https://www.bensbites.com/feed" },
   { name: "TLDR AI", url: "https://tldr.tech/api/rss/ai" },
@@ -54,7 +54,7 @@ const SOURCE_FEEDS: { name: string; url: string }[] = [
   { name: "Ahead of AI (Sebastian Raschka)", url: "https://magazine.sebastianraschka.com/feed" },
   { name: "AI Alignment Forum", url: "https://www.alignmentforum.org/feed.xml" },
   { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml" },
-  { name: "Mistral Blog", url: GOOGLE_NEWS_RSS("site:mistral.ai") },
+  { name: "Mistral Blog", url: BING_NEWS_RSS("Mistral AI model release") },
 ];
 
 function extractImage(item: Parser.Item & { mediaContent?: { $?: { url?: string } }; mediaThumbnail?: { $?: { url?: string } } }): string | null {
@@ -119,14 +119,14 @@ export async function refreshFeeds(): Promise<number> {
   logger.info("Starting RSS feed refresh...");
   let total = 0;
 
-  // Fetch Google News for each tracked person
+  // Fetch Bing News for each tracked person (Bing works from cloud servers; Google News blocks them)
   const people = await db.select({ id: peopleTable.id, name: peopleTable.name }).from(peopleTable);
 
   const personResults = await Promise.allSettled(
     people.map(async (person) => {
       const query = `"${person.name}" AI`;
-      const items = await fetchFeed(GOOGLE_NEWS_RSS(query), person.name);
-      return upsertItems(items, person.id, "Google News", "news");
+      const items = await fetchFeed(BING_NEWS_RSS(query), person.name);
+      return upsertItems(items, person.id, "Bing News", "news");
     })
   );
 
