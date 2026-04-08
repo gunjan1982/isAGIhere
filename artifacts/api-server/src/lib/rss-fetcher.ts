@@ -115,6 +115,12 @@ async function upsertItems(
   return inserted;
 }
 
+let _lastRefreshedAt: Date | null = null;
+
+export function getLastRefreshedAt(): Date | null {
+  return _lastRefreshedAt;
+}
+
 export async function refreshFeeds(): Promise<number> {
   logger.info("Starting RSS feed refresh...");
   let total = 0;
@@ -146,6 +152,7 @@ export async function refreshFeeds(): Promise<number> {
     if (r.status === "fulfilled") total += r.value;
   }
 
+  _lastRefreshedAt = new Date();
   logger.info({ total }, "Feed refresh complete");
   return total;
 }

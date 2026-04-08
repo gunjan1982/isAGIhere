@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import { feedItemsTable, peopleTable } from "@workspace/db/schema";
 import { eq, desc, count, isNull, isNotNull, and, SQL } from "drizzle-orm";
 import { GetFeedQueryParams } from "@workspace/api-zod";
-import { refreshFeeds } from "../lib/rss-fetcher";
+import { refreshFeeds, getLastRefreshedAt } from "../lib/rss-fetcher";
 
 const router: IRouter = Router();
 
@@ -92,6 +92,11 @@ router.get("/people/:id/feed", async (req, res) => {
     ...item,
     publishedAt: item.publishedAt ? item.publishedAt.toISOString() : null,
   })));
+});
+
+router.get("/feed/status", (_req, res) => {
+  const last = getLastRefreshedAt();
+  res.json({ lastRefreshedAt: last ? last.toISOString() : null, refreshIntervalMs: 15 * 60 * 1000 });
 });
 
 router.post("/feed/refresh", async (_req, res) => {

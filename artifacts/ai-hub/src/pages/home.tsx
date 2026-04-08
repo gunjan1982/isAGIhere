@@ -32,6 +32,35 @@ function formatNumber(num: number) {
   return new Intl.NumberFormat("en-US").format(num);
 }
 
+function useFeedStatus() {
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
+  const [minsAgo, setMinsAgo] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStatus = () => {
+      fetch(`${import.meta.env.BASE_URL}api/feed/status`)
+        .then((r) => r.json())
+        .then((data: { lastRefreshedAt: string | null }) => {
+          if (data.lastRefreshedAt) setLastRefreshedAt(new Date(data.lastRefreshedAt));
+        })
+        .catch(() => {});
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!lastRefreshedAt) return;
+    const tick = () => setMinsAgo(Math.floor((Date.now() - lastRefreshedAt.getTime()) / 60_000));
+    tick();
+    const t = setInterval(tick, 30_000);
+    return () => clearInterval(t);
+  }, [lastRefreshedAt]);
+
+  return minsAgo;
+}
+
 function timeAgo(isoString: string | null) {
   if (!isoString) return "";
   const diff = Date.now() - new Date(isoString).getTime();
@@ -190,6 +219,7 @@ export default function Home() {
   const spotlightPeople: SpotlightPerson[] = (featured as any)?.spotlightPeople ?? [];
 
   const countdown = useAgiCountdown();
+  const feedMinsAgo = useFeedStatus();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -404,9 +434,19 @@ export default function Home() {
             <Activity className="h-5 w-5 text-primary" />
             LIVE_FEED_STREAM
           </h2>
-          <Link href="/feed" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-            VIEW_ALL <ArrowRight className="h-3 w-3" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-muted-foreground flex items-center gap-1.5">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${feedMinsAgo !== null && feedMinsAgo < 16 ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`} />
+              {feedMinsAgo === null
+                ? "SYNCING..."
+                : feedMinsAgo === 0
+                ? "SYNCED_JUST_NOW"
+                : `SYNCED_${feedMinsAgo}M_AGO`}
+            </span>
+            <Link href="/feed" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              VIEW_ALL <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 gap-4">
