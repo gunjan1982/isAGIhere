@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
 import { CommentSection } from "@/components/comment-section";
 import { useSeo } from "@/lib/useSeo";
+import { useEffect } from "react";
 
 export default function PersonDetail() {
   const [, params] = useRoute("/people/:id");
@@ -25,7 +26,32 @@ export default function PersonDetail() {
     description: person?.bio || (person ? `${person.role}${person.organization ? ` at ${person.organization}` : ""} — tracked on AI Water Cooler` : undefined),
     image: person?.imageUrl || undefined,
     type: "profile",
+    canonicalPath: id ? `/people/${id}` : undefined,
   });
+
+  useEffect(() => {
+    if (!person) return;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "person-jsonld";
+    const sameAs: string[] = [];
+    if (person.twitterHandle) sameAs.push(`https://x.com/${person.twitterHandle}`);
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": person.name,
+      "jobTitle": person.role,
+      ...(person.organization ? { "affiliation": { "@type": "Organization", "name": person.organization } } : {}),
+      ...(person.bio ? { "description": person.bio } : {}),
+      ...(person.imageUrl ? { "image": person.imageUrl } : {}),
+      "url": `https://isagihere.wiki/people/${person.id}`,
+      ...(sameAs.length > 0 ? { "sameAs": sameAs } : {}),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.getElementById("person-jsonld")?.remove();
+    };
+  }, [person]);
 
   if (isLoading) {
     return (
