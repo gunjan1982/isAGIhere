@@ -131,7 +131,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/", label: "Hub", icon: Terminal },
     { href: "/agi", label: "Is AGI Here?", icon: BrainCircuit, highlight: true },
     { href: "/people", label: "People", icon: Users },
-    { href: "/my-journey", label: "My Journey", icon: ShieldCheck },
+    { href: "/my-journey", label: "Your AI Roadmap", icon: ShieldCheck },
     { href: "/feed", label: "Feed", icon: Activity },
     { href: "/learn", label: "Learn", icon: BookOpen },
     { href: "/sources", label: "Sources", icon: Radio },

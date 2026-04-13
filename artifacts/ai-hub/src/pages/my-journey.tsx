@@ -647,28 +647,40 @@ export default function MyJourney() {
   const qc = useQueryClient();
   const [tab, setTab] = useState("profile");
 
-  const profileQuery = useQuery(["journey", "profile"], () => fetchJson<any>("/api/journey/profile"), {
-    enabled: isSignedIn,
+  const profileQuery = useQuery({
+    queryKey: ["journey", "profile"],
+    queryFn: () => fetchJson<any>("/api/journey/profile"),
+    enabled: !!isSignedIn,
   });
-  const toolsQuery = useQuery(["journey", "tools"], () => fetchJson<any[]>("/api/journey/tools/mine"), {
-    enabled: isSignedIn,
+  const toolsQuery = useQuery({
+    queryKey: ["journey", "tools"],
+    queryFn: () => fetchJson<any[]>("/api/journey/tools/mine"),
+    enabled: !!isSignedIn,
   });
-  const reviewsQuery = useQuery(["journey", "reviews"], () => fetchJson<any[]>("/api/journey/models/mine"), {
-    enabled: isSignedIn,
+  const reviewsQuery = useQuery({
+    queryKey: ["journey", "reviews"],
+    queryFn: () => fetchJson<any[]>("/api/journey/models/mine"),
+    enabled: !!isSignedIn,
   });
-  const feedQuery = useQuery(["journey", "feed"], () => fetchJson<any[]>("/api/journey/feed?limit=10"));
-  const ratingsQuery = useQuery(["journey", "ratings"], () => fetchJson<any[]>("/api/journey/models?"));
+  const feedQuery = useQuery({
+    queryKey: ["journey", "feed"],
+    queryFn: () => fetchJson<any[]>("/api/journey/feed?limit=10"),
+  });
+  const ratingsQuery = useQuery({
+    queryKey: ["journey", "ratings"],
+    queryFn: () => fetchJson<any[]>("/api/journey/models"),
+  });
 
   const saveProfile = async (data: any) => {
     await fetchJson("/api/journey/profile", { method: "POST", body: JSON.stringify(data) });
-    qc.invalidateQueries(["journey", "profile"]);
+    qc.invalidateQueries({ queryKey: ["journey", "profile"] });
   };
 
   if (!isSignedIn) {
     return (
       <div className="space-y-6">
         <div className="border border-border/50 bg-card p-8">
-          <h1 className="text-3xl font-bold font-mono">MY_AI_JOURNEY</h1>
+          <h1 className="text-3xl font-bold font-mono">YOUR_AI_ROADMAP</h1>
           <p className="mt-3 text-sm text-muted-foreground max-w-2xl">
             Track your AI tool usage, submit reviews for frontier models, and share your public AI journey with the community.
           </p>
@@ -684,7 +696,7 @@ export default function MyJourney() {
     <div className="space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between border-b border-border/50 pb-6">
         <div>
-          <h1 className="text-3xl font-bold font-mono">MY_AI_JOURNEY</h1>
+          <h1 className="text-3xl font-bold font-mono">YOUR_AI_ROADMAP</h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
             A personal dashboard for your AI profile, tool check-ins, and frontier model reviews.
           </p>
