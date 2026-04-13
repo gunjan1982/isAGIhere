@@ -31,14 +31,29 @@ function isInterviewLike(title: string, description: string): boolean {
 }
 
 const INTERVIEW_TITLE_KEYWORDS = [
-  "interview", "conversation", "talk", "podcast", "speaks with", "sits down",
-  "in conversation", "q&a", "fireside", "discusses", "on the future",
-  "why ", "how ", "what ", "the power", "the history", "the future",
+  "interview", "conversation", "podcast", "speaks with", "sits down",
+  "in conversation", "q&a", "fireside", "discusses", "full interview",
+  "the future of", "the history of", "on ai", "on agi",
+  "why agi", "how ai", "what is ai",
+];
+
+// Words that indicate clickbait / shorts / low-quality content
+const EXCLUDE_KEYWORDS = [
+  "#shorts", "#short", "shorts", "clip", "viral", "motivational",
+  "mindset", "must watch", "speechless", "brutally honest", "terrified",
+  "leaves reporter", "refuses to", "finally reveals", "this is why",
+  "you won't believe", "shocking", "crypto", "bitcoin", "stock", "invest",
+  "day in a life", "rise and shine", "reaction to", "reacts to",
+  "mock interview", "job interview", "career switch", "racing", "turf",
+  "podcast clip", "clips", "#podclip",
 ];
 
 // Looser check for YouTube Data API results — we've already searched for "<name> interview"
 function isInterviewTitle(title: string): boolean {
   const t = title.toLowerCase();
+  // Reject if any exclude keyword is present
+  if (EXCLUDE_KEYWORDS.some((kw) => t.includes(kw))) return false;
+  // Must match at least one quality signal
   return INTERVIEW_TITLE_KEYWORDS.some((kw) => t.includes(kw));
 }
 
