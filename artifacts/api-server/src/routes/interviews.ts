@@ -102,11 +102,15 @@ router.get("/interviews/:id/transcript", async (req, res) => {
 
 // POST /interviews/refresh — admin-only manual trigger
 router.post("/interviews/refresh", async (req, res) => {
-  const { fetchPersonInterviews, fetchInterviewerChannels } = await import("../lib/youtube-fetcher");
+  const { fetchPersonInterviews, fetchInterviewerChannels, searchPersonInterviewsOnYouTube } = await import("../lib/youtube-fetcher");
   const { generateMissingSummaries } = await import("../lib/interview-summarizer");
-  const [fetched, fetchedChannels] = await Promise.all([fetchPersonInterviews(), fetchInterviewerChannels()]);
+  const [fetched, fetchedChannels, searchedYT] = await Promise.all([
+    fetchPersonInterviews(),
+    fetchInterviewerChannels(),
+    searchPersonInterviewsOnYouTube(),
+  ]);
   const summarized = await generateMissingSummaries(10);
-  res.json({ fetched, fetchedChannels, summarized });
+  res.json({ fetched, fetchedChannels, searchedYT, summarized });
 });
 
 export default router;

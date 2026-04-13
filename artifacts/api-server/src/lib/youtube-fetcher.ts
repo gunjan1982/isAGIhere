@@ -30,6 +30,18 @@ function isInterviewLike(title: string, description: string): boolean {
   return AI_KEYWORDS.some((kw) => text.includes(kw));
 }
 
+const INTERVIEW_TITLE_KEYWORDS = [
+  "interview", "conversation", "talk", "podcast", "speaks with", "sits down",
+  "in conversation", "q&a", "fireside", "discusses", "on the future",
+  "why ", "how ", "what ", "the power", "the history", "the future",
+];
+
+// Looser check for YouTube Data API results — we've already searched for "<name> interview"
+function isInterviewTitle(title: string): boolean {
+  const t = title.toLowerCase();
+  return INTERVIEW_TITLE_KEYWORDS.some((kw) => t.includes(kw));
+}
+
 export async function fetchPersonInterviews(): Promise<number> {
   const people = await db
     .select({ id: peopleTable.id, name: peopleTable.name, youtubeChannelId: peopleTable.youtubeChannelId })
@@ -189,13 +201,121 @@ export async function fetchInterviewerChannels(): Promise<number> {
   return inserted;
 }
 
+// ── YouTube Data API search ──────────────────────────────────────────────────
+// Searches YouTube for "<name> interview" for every tracked person.
+// Requires YOUTUBE_API_KEY env var (YouTube Data API v3).
+// Costs ~100 quota units per person search; free quota is 10,000/day.
+
+interface YTSearchItem {
+  id: { videoId: string };
+  snippet: {
+    title: string;
+    description: string;
+    publishedAt: string;
+    channelTitle: string;
+    channelId: string;
+    thumbnails: { high?: { url: string }; default?: { url: string } };
+  };
+}
+
+export async function searchPersonInterviewsOnYouTube(): Promise<number> {
+  const apiKey = process.env["YOUTUBE_API_KEY"];
+  if (!apiKey) {
+    logger.warn("YOUTUBE_API_KEY not set — skipping YouTube search");
+    return 0;
+  }
+
+  const people = await db
+    .select({ id: peopleTable.id, name: peopleTable.name })
+    .from(peopleTable);
+
+  // Only look back 30 days to keep quota low
+  const publishedAfter = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  let inserted = 0;
+
+  // Process in small batches to avoid hammering the API
+  const BATCH = 5;
+  for (let i = 0; i < people.length; i += BATCH) {
+    const batch = people.slice(i, i + BATCH);
+    const results = await Promise.allSettled(
+      batch.map(async (person) => {
+        const query = encodeURIComponent(`${person.name} interview`);
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&order=date&maxResults=10&publishedAfter=${publishedAfter}&key=${apiKey}`;
+
+        let items: YTSearchItem[];
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            logger.warn({ person: person.name, status: res.status }, "YouTube search failed");
+            return;
+          }
+          const data = await res.json() as { items?: YTSearchItem[] };
+          items = data.items ?? [];
+        } catch (err) {
+          logger.warn({ person: person.name, err }, "YouTube search request error");
+          return;
+        }
+
+        for (const item of items) {
+          const videoId = item.id.videoId;
+          if (!videoId) continue;
+
+          const { title, description, publishedAt, channelTitle, channelId, thumbnails } = item.snippet;
+
+          // Must contain the person's name in the title (avoid false positives)
+          if (!title.toLowerCase().includes(person.name.toLowerCase())) continue;
+
+          // Must look like an interview (looser check — search query already includes "interview")
+          if (!isInterviewTitle(title)) continue;
+
+          const thumbnailUrl =
+            thumbnails.high?.url ?? thumbnails.default?.url ??
+            `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+          try {
+            await db.insert(interviewsTable).values({
+              personId: person.id,
+              videoId,
+              channelId,
+              channelName: channelTitle,
+              title,
+              url: `https://www.youtube.com/watch?v=${videoId}`,
+              thumbnailUrl,
+              description: description.slice(0, 2000),
+              publishedAt: new Date(publishedAt),
+              isOriginalSource: false,
+            }).onConflictDoNothing({ target: interviewsTable.videoId });
+            inserted++;
+          } catch (err) {
+            logger.error({ videoId, err }, "Failed to insert YouTube search result");
+          }
+        }
+      })
+    );
+
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) logger.warn({ failed }, "Some YouTube search batches failed");
+
+    // Small delay between batches to be a good API citizen
+    if (i + BATCH < people.length) await new Promise(r => setTimeout(r, 500));
+  }
+
+  logger.info({ inserted }, "YouTube person search complete");
+  return inserted;
+}
+
 export function startInterviewScheduler(intervalMs = 60 * 60 * 1000) {
   if (fetchTimer) return;
-  Promise.all([fetchPersonInterviews(), fetchInterviewerChannels()])
+
+  // Run channel RSS + person search on startup
+  Promise.all([fetchPersonInterviews(), fetchInterviewerChannels(), searchPersonInterviewsOnYouTube()])
     .then(() => { lastFetchedAt = new Date(); })
     .catch((e) => {
       logger.error({ err: e }, "Initial interview fetch failed");
     });
+
+  // Hourly: channel RSS feeds (cheap)
   fetchTimer = setInterval(async () => {
     try {
       await Promise.all([fetchPersonInterviews(), fetchInterviewerChannels()]);
@@ -204,6 +324,16 @@ export function startInterviewScheduler(intervalMs = 60 * 60 * 1000) {
       logger.error({ err: e }, "Scheduled interview fetch failed");
     }
   }, intervalMs);
+
+  // Daily: YouTube search (uses API quota)
+  setInterval(async () => {
+    try {
+      await searchPersonInterviewsOnYouTube();
+      lastFetchedAt = new Date();
+    } catch (e) {
+      logger.error({ err: e }, "Daily YouTube search failed");
+    }
+  }, 24 * 60 * 60 * 1000);
 }
 
 export function getInterviewLastFetchedAt() { return lastFetchedAt; }
