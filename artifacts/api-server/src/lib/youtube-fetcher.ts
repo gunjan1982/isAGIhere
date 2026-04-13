@@ -14,16 +14,20 @@ function extractVideoId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
-const INTERVIEW_KEYWORDS = [
-  "interview", "conversation with", "talks with", "speaks with",
-  "on ai", "on agi", "podcast", "fireside", "chat with", "sits down",
-  "q&a", "discusses", "future of ai", "artificial general intelligence",
-  "new model", "capabilities", "safety", "alignment",
+const AI_KEYWORDS = [
+  "artificial intelligence", " ai ", " ai,", " ai.", " agi", "machine learning",
+  "deep learning", "neural network", "large language model", "llm", "gpt",
+  "openai", "anthropic", "deepmind", "google deepmind", "mistral", "nvidia gpu",
+  "robotics", "alignment", "safety", "capabilities", "scaling", "reasoning",
+  "future of ai", "future of technology", "silicon valley", "tech ceo",
+  "sam altman", "yann lecun", "andrej karpathy", "ilya sutskever",
+  "dario amodei", "demis hassabis", "jensen huang", "elon musk",
+  "geoffrey hinton", "yoshua bengio", "meta ai", "openai ceo",
 ];
 
 function isInterviewLike(title: string, description: string): boolean {
   const text = (title + " " + description).toLowerCase();
-  return INTERVIEW_KEYWORDS.some((kw) => text.includes(kw));
+  return AI_KEYWORDS.some((kw) => text.includes(kw));
 }
 
 export async function fetchPersonInterviews(): Promise<number> {
