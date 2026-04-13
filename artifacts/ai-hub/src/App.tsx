@@ -19,6 +19,8 @@ import MyHub from "@/pages/my-hub";
 import Analytics from "@/pages/analytics";
 import Admin from "@/pages/admin";
 import SearchPage from "@/pages/search";
+import Interviews from "@/pages/interviews";
+import MyJourney from "@/pages/my-journey";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +95,8 @@ function Router() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/admin" component={Admin} />
         <Route path="/search" component={SearchPage} />
+        <Route path="/my-journey" component={MyJourney} />
+        <Route path="/interviews" component={Interviews} />
         <Route path="/sign-in/*?" component={SignInPage} />
         <Route path="/sign-up/*?" component={SignUpPage} />
         <Route component={NotFound} />

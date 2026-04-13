@@ -14,6 +14,9 @@ export const sourcesTable = pgTable("sources", {
   host: text("host"),
   bestFor: text("best_for"),
   isHighSignal: boolean("is_high_signal").default(false),
+  youtubeChannelId: text("youtube_channel_id"),
+  isInterviewChannel: boolean("is_interview_channel").default(false),
+  featuredPeopleIds: text("featured_people_ids"),
 });
 
 export const insertSourceSchema = createInsertSchema(sourcesTable).omit({ id: true });

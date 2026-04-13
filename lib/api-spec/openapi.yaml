@@ -128,6 +128,220 @@ paths:
                 items:
                   $ref: "#/components/schemas/Source"
 
+  /journey/feed:
+    get:
+      operationId: listJourneyFeed
+      tags: [journey]
+      summary: List public AI Journey profiles
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Public profile feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommunityProfile"
+
+  /journey/profile:
+    get:
+      operationId: getJourneyProfile
+      tags: [journey]
+      summary: Get the authenticated user's AI Journey profile
+      responses:
+        "200":
+          description: User profile or null
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/AiJourneyProfile"
+                  - type: "null"
+    post:
+      operationId: saveJourneyProfile
+      tags: [journey]
+      summary: Create or update the authenticated user's AI Journey profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiJourneyProfile"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiJourneyProfile"
+
+  /journey/tools/mine:
+    get:
+      operationId: listMyJourneyTools
+      tags: [journey]
+      summary: List the authenticated user's AI tool usage
+      responses:
+        "200":
+          description: List of user tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiToolUsage"
+
+  /journey/tools:
+    post:
+      operationId: saveJourneyTool
+      tags: [journey]
+      summary: Add or update an AI tool usage entry for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiToolUsage"
+      responses:
+        "200":
+          description: Operation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /journey/tools/{id}:
+    delete:
+      operationId: deleteJourneyTool
+      tags: [journey]
+      summary: Delete a tool usage entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /journey/models:
+    get:
+      operationId: listJourneyModelRatings
+      tags: [journey]
+      summary: List public aggregate ratings for frontier models
+      responses:
+        "200":
+          description: Model rating aggregates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModelRatingAggregate"
+    post:
+      operationId: saveJourneyModelReview
+      tags: [journey]
+      summary: Create or update a frontier model review for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrontierModelReview"
+      responses:
+        "200":
+          description: Operation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /journey/models/reviews:
+    get:
+      operationId: listJourneyModelReviews
+      tags: [journey]
+      summary: List recent public frontier model reviews
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: model
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public reviews list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FrontierModelReview"
+
+  /journey/models/mine:
+    get:
+      operationId: listMyJourneyModelReviews
+      tags: [journey]
+      summary: List the authenticated user's frontier model reviews
+      responses:
+        "200":
+          description: User's reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FrontierModelReview"
+
+  /journey/models/{id}:
+    delete:
+      operationId: deleteJourneyModelReview
+      tags: [journey]
+      summary: Delete a frontier model review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
   /communities:
     get:
       operationId: listCommunities
@@ -284,10 +498,163 @@ components:
           type: string
         isHighSignal:
           type: boolean
+        youtubeChannelId:
+          type: string
+          nullable: true
+        isInterviewChannel:
+          type: boolean
+        featuredPeopleIds:
+          type: string
+          nullable: true
       required:
         - id
         - name
         - type
+
+    AiJourneyProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        displayName:
+          type: string
+        currentRole:
+          type: string
+        aiExperienceLevel:
+          type: string
+        currentlyWorkingOn:
+          type: string
+        primaryUseCase:
+          type: string
+        bio:
+          type: string
+        isPublic:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    AiToolUsage:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        toolName:
+          type: string
+        toolCategory:
+          type: string
+        useCase:
+          type: string
+        frequency:
+          type: string
+        rating:
+          type: integer
+        notes:
+          type: string
+        isPublic:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    FrontierModelReview:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        provider:
+          type: string
+        modelName:
+          type: string
+        modelVersion:
+          type: string
+        primaryUseCase:
+          type: string
+        usagePeriodStart:
+          type: string
+        usagePeriodEnd:
+          type: string
+        lastUsedAt:
+          type: string
+          format: date-time
+        overallRating:
+          type: integer
+        reasoningRating:
+          type: integer
+        codingRating:
+          type: integer
+        creativeRating:
+          type: integer
+        speedRating:
+          type: integer
+        strengths:
+          type: string
+        weaknesses:
+          type: string
+        review:
+          type: string
+        wouldRecommend:
+          type: boolean
+        isPublic:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ModelRatingAggregate:
+      type: object
+      properties:
+        provider:
+          type: string
+        modelName:
+          type: string
+        avgRating:
+          type: number
+        reviewCount:
+          type: integer
+
+    CommunityProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        displayName:
+          type: string
+        currentRole:
+          type: string
+        aiExperienceLevel:
+          type: string
+        currentlyWorkingOn:
+          type: string
+        primaryUseCase:
+          type: string
+        bio:
+          type: string
+        isPublic:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
 
     Community:
       type: object

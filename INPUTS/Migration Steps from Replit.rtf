@@ -1,0 +1,167 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red233\green232\blue234;\red23\green23\blue24;\red109\green109\blue109;
+\red28\green28\blue29;\red200\green100\blue23;\red26\green26\blue26;\red211\green210\blue213;\red203\green205\blue206;
+\red253\green175\blue103;\red164\green207\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c92941\c92941\c93333;\cssrgb\c11765\c11765\c12157;\cssrgb\c50196\c50196\c50196;
+\cssrgb\c14510\c14510\c15294;\cssrgb\c83137\c47059\c10980;\cssrgb\c13333\c13333\c13725;\cssrgb\c85882\c85882\c86667;\cssrgb\c83529\c83922\c84314;
+\cssrgb\c100000\c74118\c47843;\cssrgb\c69804\c85098\c100000;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid101\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww37860\viewh20540\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 MIGRATION FROM REPLIT\
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f1\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
+I can see what keys are configured but cannot read their actual values \'97 that's a security restriction. Here's where to get each one for your new host:\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 DATABASE_URL
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 You need a new database on your new host \'97 you can't reuse this one directly. Options:\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0\cf2 \cb3 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}{\field{\*\fldinst{HYPERLINK "https://neon.tech/"}}{\fldrslt \expnd0\expndtw0\kerning0
+\ul neon.tech}}\expnd0\expndtw0\kerning0
+ \'97 free tier, gives you a connection string instantly\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}{\field{\*\fldinst{HYPERLINK "https://railway.app/"}}{\fldrslt \expnd0\expndtw0\kerning0
+\ul railway.app}}\expnd0\expndtw0\kerning0
+ \'97 add a Postgres plugin, connection string appears in the dashboard\cb1 \uc0\u8232 \cb3 Once created, run 
+\fs26 \cf6 pnpm run db:push
+\fs28 \cf2  to create the tables, then the app will seed itself on first boot.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 RESEND_API_KEY
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 Go to {\field{\*\fldinst{HYPERLINK "https://resend.com/"}}{\fldrslt \ul resend.com}} \uc0\u8594  your account \u8594  API Keys \u8594  copy your existing key (or create a new one). You already have an account since it's working today.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 SESSION_SECRET
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 This is just a long random string. Generate a fresh one with:\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb7 openssl rand -hex 32\cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs22 \cf8 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs28 \cf2 \cb3 Any 32+ character random string works.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 CLERK_SECRET_KEY
+\fs28 \cf2  + 
+\fs26 \cf6 CLERK_PUBLISHABLE_KEY
+\fs28 \cf2  + 
+\fs26 \cf6 VITE_CLERK_PUBLISHABLE_KEY
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 Go to {\field{\*\fldinst{HYPERLINK "https://dashboard.clerk.com/"}}{\fldrslt \ul dashboard.clerk.com}} \uc0\u8594  your app \u8594  API Keys. Both keys are shown there. The publishable key starts with 
+\fs26 \cf6 pk_
+\fs28 \cf2 , the secret key starts with 
+\fs26 \cf6 sk_
+\fs28 \cf2 .\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 VITE_CLERK_PROXY_URL
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 This will be your new domain \'97 e.g. 
+\fs26 \cf6 https://yourdomain.com/clerk
+\fs28 \cf2 . You set this up in the Clerk dashboard under Domains when you add your new host's domain.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs26 \cf6 \cb3 PORT
+\fs28 \cf2 \cb1 \uc0\u8232 \cb3 Don't set this manually \'97 Railway, Render, and Fly all inject it automatically.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 FOR DATABASE \cf2 \cb3 There are two parts: schema (the table structure) and data (the actual records). Here's the full process:\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\cf9 \cb3 Part 1: Export data from Replit (do this first, while still on Replit)\cb1 \
+\pard\pardeftab720\sa320\partightenfactor0
+\cf2 \cb3 Run this in a shell on your new host \'97 or locally if you have 
+\fs26 \cf6 pg_dump
+\fs28 \cf2  installed. You need the Replit 
+\fs26 \cf6 DATABASE_URL
+\fs28 \cf2  which you can copy from the Replit Secrets panel (eye icon next to 
+\fs26 \cf6 DATABASE_URL
+\fs28 \cf2 ):\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb7 pg_dump \cf10 \cb7 "\cf2 \cb7 $REPLIT_DATABASE_URL\cf10 \cb7 "\cf2 \cb7  \\\cb1 \
+\cf11 \cb7 --data-only\cf2 \cb7  \\\cb1 \
+\cf11 \cb7 --no-owner\cf2 \cb7  \\\cb1 \
+\cf11 \cb7 --no-privileges\cf2 \cb7  \\\cb1 \
+\cf11 \cb7 -f\cf2 \cb7  backup.sql\cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs22 \cf8 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs28 \cf2 \cb3 The 
+\fs26 \cf6 --data-only
+\fs28 \cf2  flag skips the table structure (Drizzle will recreate that) and just exports your rows.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\cf9 \cb3 Part 2: Set up the new database\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf2 \cb3 \kerning1\expnd0\expndtw0 {\listtext	1	}\expnd0\expndtw0\kerning0
+Create a new Postgres database on Neon/Railway/etc\cb1 \
+\ls2\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	2	}\expnd0\expndtw0\kerning0
+Copy the connection string they give you \'97 it looks like: \cb7 postgres://user:password@host/dbname?sslmode=require\cb1 \uc0\u8232 
+\fs22 \cf8 \uc0\u8232 
+\fs28 \cf2 \uc0\u8232 \
+\ls2\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	3	}\expnd0\expndtw0\kerning0
+Set that as 
+\fs26 \cf6 DATABASE_URL
+\fs28 \cf2  in your new host's environment variables\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\cf9 \cb3 Part 3: Push the schema (creates all tables)\cb1 \
+\pard\pardeftab720\sa320\partightenfactor0
+\cf2 \cb3 In your project folder on the new host:\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb7 pnpm run db:push\cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs22 \cf8 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs28 \cf2 \cb3 This reads your Drizzle schema files and creates all the tables \'97 no manual SQL needed. If it asks about conflicts, run 
+\fs26 \cf6 pnpm run db:push --force
+\fs28 \cf2 .\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\cf9 \cb3 Part 4: Import your data\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb7 psql \cf10 \cb7 "\cf2 \cb7 $NEW_DATABASE_URL\cf10 \cb7 "\cf2 \cb7  \cf11 \cb7 -f\cf2 \cb7  backup.sql\cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs22 \cf8 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs28 \cf2 \cb3 This loads all your people, feed items, comments, and user data into the new tables.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\cf9 \cb3 Part 5: Verify\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb7 psql \cf10 \cb7 "\cf2 \cb7 $NEW_DATABASE_URL\cf10 \cb7 "\cf2 \cb7  \cf11 \cb7 -c\cf2 \cb7  \cf10 \cb7 "SELECT COUNT(*) FROM people;"\cf2 \cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs22 \cf8 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\fs28 \cf2 \cb3 Should return 56. If it does, your database is fully migrated.\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \cb5 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Note on seeding: The app auto-seeds on first boot if the 
+\fs26 \cf6 people
+\fs28 \cf2  table is empty. Since you're importing real data, the seed will be skipped automatically \'97 nothing to worry about there.\cf4 \cb5 \
+}

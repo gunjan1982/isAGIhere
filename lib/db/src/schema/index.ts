@@ -6,3 +6,5 @@ export * from "./follows";
 export * from "./analytics";
 export * from "./comments";
 export * from "./submissions";
+export * from "./interviews";
+export * from "./journey";
