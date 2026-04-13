@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { seedIfEmpty, updateSeedData } from "./lib/seed";
 import { refreshFeeds } from "./lib/rss-fetcher";
 import { buildDigestAndSendToAll } from "./lib/digest-scheduler";
+import { startInterviewScheduler } from "./lib/youtube-fetcher";
 
 const rawPort = process.env["PORT"];
 
@@ -42,6 +43,9 @@ app.listen(port, (err) => {
 
   // Weekly digest scheduler — fires every Monday at 08:00 UTC
   scheduleWeeklyDigest();
+
+  // YouTube interview fetcher — runs every hour
+  startInterviewScheduler();
 });
 
 function scheduleWeeklyDigest() {

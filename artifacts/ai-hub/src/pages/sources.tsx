@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useListSources } from "@workspace/api-client-react";
-import { Radio, Search, Filter, ExternalLink, Activity } from "lucide-react";
+import { Radio, Search, Filter, ExternalLink, Activity, Youtube, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -86,74 +86,182 @@ export default function Sources() {
             NO_FEEDS_MATCH_CRITERIA
           </div>
         ) : (
-          sources?.map((source, i) => (
-            <div 
-              key={source.id} 
-              className="group flex flex-col md:flex-row gap-4 border border-border/50 bg-card p-4 md:p-6 hover:border-primary/50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex-grow space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-xl font-bold">{source.name}</h3>
-                      {source.isHighSignal && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-mono text-[10px] py-0">HIGH_SIGNAL</Badge>
-                      )}
-                    </div>
-                    {source.host && (
-                      <p className="text-sm font-mono text-muted-foreground">HOST: {source.host}</p>
+          sources?.map((source, i) => {
+            const src = source as typeof source & {
+              youtubeChannelId?: string | null;
+              isInterviewChannel?: boolean;
+            };
+            const isYouTube = src.type === "youtube";
+            const channelThumb = isYouTube && src.youtubeChannelId
+              ? `https://i.ytimg.com/vi/${src.youtubeChannelId}/default.jpg`
+              : null;
+
+            return isYouTube ? (
+              // ── YouTube card variant ────────────────────────────────────────
+              <div
+                key={src.id}
+                className="group flex flex-col md:flex-row gap-4 border border-border/50 bg-card p-4 md:p-6 hover:border-primary/50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="flex gap-4 flex-grow">
+                  {/* Channel thumbnail */}
+                  <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 bg-secondary border border-border/50 overflow-hidden flex items-center justify-center">
+                    {channelThumb ? (
+                      <img
+                        src={channelThumb}
+                        alt={src.name}
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      />
+                    ) : (
+                      <Youtube className="h-8 w-8 text-muted-foreground" />
                     )}
                   </div>
-                  <Badge className="font-mono text-[10px] uppercase rounded-none shrink-0 bg-secondary text-foreground hover:bg-secondary">
-                    {source.type.replace('_', ' ')}
-                  </Badge>
-                </div>
-                
-                <p className="text-sm text-foreground/80 leading-relaxed max-w-4xl">
-                  {source.description}
-                </p>
 
-                <div className="flex flex-wrap gap-4 pt-2">
-                  {source.audience && (
-                    <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
-                      <span className="text-muted-foreground">AUDIENCE:</span> <span className="text-foreground">{source.audience}</span>
+                  <div className="flex-grow space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h3 className="text-xl font-bold">{src.name}</h3>
+                          {src.isHighSignal && (
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-mono text-[10px] py-0">HIGH_SIGNAL</Badge>
+                          )}
+                          {src.isInterviewChannel && (
+                            <Badge variant="outline" className="bg-rose-500/10 text-rose-400 border-rose-500/30 font-mono text-[10px] py-0 flex items-center gap-1">
+                              <Users className="h-3 w-3" /> INTERVIEW_CHANNEL
+                            </Badge>
+                          )}
+                        </div>
+                        {src.host && (
+                          <p className="text-sm font-mono text-muted-foreground">HOST: {src.host}</p>
+                        )}
+                      </div>
+                      <Badge className="font-mono text-[10px] uppercase rounded-none shrink-0 bg-rose-500/20 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 flex items-center gap-1">
+                        <Youtube className="h-3 w-3" /> YOUTUBE
+                      </Badge>
                     </div>
-                  )}
-                  {source.frequency && (
-                    <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
-                      <span className="text-muted-foreground">FREQ:</span> <span className="text-foreground">{source.frequency}</span>
+
+                    <p className="text-sm text-foreground/80 leading-relaxed max-w-4xl">
+                      {src.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-4 pt-2">
+                      {src.audience && (
+                        <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                          <span className="text-muted-foreground">AUDIENCE:</span> <span className="text-foreground">{src.audience}</span>
+                        </div>
+                      )}
+                      {src.frequency && (
+                        <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                          <span className="text-muted-foreground">FREQ:</span> <span className="text-foreground">{src.frequency}</span>
+                        </div>
+                      )}
+                      {src.subscriberCount && (
+                        <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                          <span className="text-muted-foreground">SUBS:</span> <span className="text-foreground">{src.subscriberCount}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {source.subscriberCount && (
-                    <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
-                      <span className="text-muted-foreground">SUBS:</span> <span className="text-foreground">{source.subscriberCount}</span>
-                    </div>
-                  )}
+                  </div>
+                </div>
+
+                <div className="md:w-48 flex-shrink-0 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6">
+                  <div className="hidden md:block space-y-2">
+                    <p className="text-[10px] font-mono text-muted-foreground">PRIMARY_VALUE:</p>
+                    <p className="text-xs text-foreground/90">{src.bestFor}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 mt-4 md:mt-0">
+                    {src.url && (
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-2 w-full border border-rose-500/50 text-rose-400 hover:bg-rose-500 hover:text-white font-mono text-sm py-2 px-4 transition-colors"
+                      >
+                        <Youtube className="h-4 w-4" /> SUBSCRIBE
+                      </a>
+                    )}
+                    {src.isInterviewChannel && (
+                      <a
+                        href="/interviews"
+                        className="inline-flex items-center justify-center gap-2 w-full border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground font-mono text-xs py-2 px-4 transition-colors"
+                      >
+                        VIEW_INTERVIEWS →
+                      </a>
+                    )}
+                    <FollowButton entityType="source" entityId={src.id} size="md" className="w-full justify-center" />
+                  </div>
                 </div>
               </div>
-              
-              <div className="md:w-48 flex-shrink-0 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6">
-                <div className="hidden md:block space-y-2">
-                  <p className="text-[10px] font-mono text-muted-foreground">PRIMARY_VALUE:</p>
-                  <p className="text-xs text-foreground/90">{source.bestFor}</p>
+            ) : (
+              // ── Default card (newsletters, podcasts, blogs, news sites) ────
+              <div
+                key={src.id}
+                className="group flex flex-col md:flex-row gap-4 border border-border/50 bg-card p-4 md:p-6 hover:border-primary/50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="flex-grow space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-xl font-bold">{src.name}</h3>
+                        {src.isHighSignal && (
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-mono text-[10px] py-0">HIGH_SIGNAL</Badge>
+                        )}
+                      </div>
+                      {src.host && (
+                        <p className="text-sm font-mono text-muted-foreground">HOST: {src.host}</p>
+                      )}
+                    </div>
+                    <Badge className="font-mono text-[10px] uppercase rounded-none shrink-0 bg-secondary text-foreground hover:bg-secondary">
+                      {src.type.replace('_', ' ')}
+                    </Badge>
+                  </div>
+
+                  <p className="text-sm text-foreground/80 leading-relaxed max-w-4xl">
+                    {src.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-4 pt-2">
+                    {src.audience && (
+                      <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                        <span className="text-muted-foreground">AUDIENCE:</span> <span className="text-foreground">{src.audience}</span>
+                      </div>
+                    )}
+                    {src.frequency && (
+                      <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                        <span className="text-muted-foreground">FREQ:</span> <span className="text-foreground">{src.frequency}</span>
+                      </div>
+                    )}
+                    {src.subscriberCount && (
+                      <div className="text-xs font-mono border-l-2 border-border/50 pl-2">
+                        <span className="text-muted-foreground">SUBS:</span> <span className="text-foreground">{src.subscriberCount}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 mt-4 md:mt-0">
-                  {source.url && (
-                    <a 
-                      href={source.url} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary hover:text-primary-foreground font-mono text-sm py-2 px-4 transition-colors"
-                    >
-                      ACCESS_FEED <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
-                  <FollowButton entityType="source" entityId={source.id} size="md" className="w-full justify-center" />
+
+                <div className="md:w-48 flex-shrink-0 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6">
+                  <div className="hidden md:block space-y-2">
+                    <p className="text-[10px] font-mono text-muted-foreground">PRIMARY_VALUE:</p>
+                    <p className="text-xs text-foreground/90">{src.bestFor}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 mt-4 md:mt-0">
+                    {src.url && (
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-2 w-full border border-primary text-primary hover:bg-primary hover:text-primary-foreground font-mono text-sm py-2 px-4 transition-colors"
+                      >
+                        ACCESS_FEED <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                    <FollowButton entityType="source" entityId={src.id} size="md" className="w-full justify-center" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

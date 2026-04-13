@@ -16,6 +16,8 @@ export const peopleTable = pgTable("people", {
   bestFor: text("best_for"),
   imageUrl: text("image_url"),
   isSpotlight: boolean("is_spotlight").default(false),
+  youtubeChannelId: text("youtube_channel_id"),   // The person's OWN YouTube channel ID (for RSS)
+  youtubeHandle: text("youtube_handle"),           // e.g. "@SamAltman" (for display)
 });
 
 export const insertPersonSchema = createInsertSchema(peopleTable).omit({ id: true });

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2, ShieldCheck, Search } from "lucide-react";
+import { Users, Radio, MessageSquare, Terminal, Activity, BrainCircuit, BookOpen, LogIn, LogOut, User, ChevronDown, LayoutDashboard, BarChart2, ShieldCheck, Search, Film } from "lucide-react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { useUser, useClerk, Show } from "@clerk/react";
 import { SignupNudge } from "./signup-nudge";
@@ -131,10 +131,12 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/", label: "Hub", icon: Terminal },
     { href: "/agi", label: "Is AGI Here?", icon: BrainCircuit, highlight: true },
     { href: "/people", label: "People", icon: Users },
+    { href: "/my-journey", label: "My Journey", icon: ShieldCheck },
     { href: "/feed", label: "Feed", icon: Activity },
     { href: "/learn", label: "Learn", icon: BookOpen },
     { href: "/sources", label: "Sources", icon: Radio },
     { href: "/communities", label: "Communities", icon: MessageSquare },
+    { href: "/interviews", label: "Interviews", icon: Film },
   ];
 
   return (

@@ -1,17 +1,35 @@
 import { useRoute } from "wouter";
 import { useGetPerson, useGetPersonFeed } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowLeft, ExternalLink, Twitter, Target, Building2, TerminalSquare, Activity } from "lucide-react";
+import { ArrowLeft, ExternalLink, Twitter, Target, Building2, TerminalSquare, Activity, Film } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
 import { CommentSection } from "@/components/comment-section";
+import { InterviewCard, type InterviewItem } from "@/components/interview-card";
 import { useSeo } from "@/lib/useSeo";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function usePersonInterviews(personId: number, enabled: boolean) {
+  return useQuery<InterviewItem[]>({
+    queryKey: ["person-interviews", personId],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/people/${personId}/interviews?limit=6`);
+      if (!res.ok) throw new Error("Failed to fetch interviews");
+      return res.json();
+    },
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}
 
 export default function PersonDetail() {
   const [, params] = useRoute("/people/:id");
   const id = params?.id ? parseInt(params.id, 10) : 0;
+  const [activeTab, setActiveTab] = useState<"activity" | "interviews">("activity");
   
   const { data: person, isLoading, isError } = useGetPerson(id, { 
     query: { enabled: !!id, queryKey: [`/api/people/${id}`] } 
@@ -20,6 +38,8 @@ export default function PersonDetail() {
   const { data: feedData, isLoading: isFeedLoading } = useGetPersonFeed(id, { limit: 15 }, {
     query: { enabled: !!id, queryKey: [`/api/people/${id}/feed`, { limit: 15 }] }
   });
+
+  const { data: interviews, isLoading: isInterviewsLoading } = usePersonInterviews(id, !!id);
 
   useSeo({
     title: person?.name || "Person Profile",
@@ -204,26 +224,90 @@ export default function PersonDetail() {
           </div>
 
           <div className="space-y-4 pt-8">
-            <h3 className="font-mono text-lg font-bold text-foreground flex items-center gap-2 border-b border-border/50 pb-2">
-              <Activity className="h-5 w-5 text-primary" />
-              LATEST_ACTIVITY
-            </h3>
-            
-            <div className="flex flex-col gap-4">
-              {isFeedLoading ? (
-                Array(3).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-32 w-full bg-secondary" />
-                ))
-              ) : feedData && feedData.length > 0 ? (
-                feedData.map((item) => (
-                  <FeedCard key={item.id} item={item} />
-                ))
-              ) : (
-                <div className="border border-border/50 bg-secondary/10 p-8 text-center font-mono text-muted-foreground">
-                  NO_ACTIVITY_RECORDED
-                </div>
-              )}
+            {/* Tab bar */}
+            <div className="flex gap-2 border-b border-border/50 pb-0">
+              <button
+                onClick={() => setActiveTab("activity")}
+                className={`flex items-center gap-2 px-4 py-2 font-mono text-sm border-b-2 transition-all ${
+                  activeTab === "activity"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                LATEST_ACTIVITY
+              </button>
+              <button
+                onClick={() => setActiveTab("interviews")}
+                className={`flex items-center gap-2 px-4 py-2 font-mono text-sm border-b-2 transition-all ${
+                  activeTab === "interviews"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Film className="h-4 w-4" />
+                INTERVIEWS
+                {interviews && interviews.length > 0 && (
+                  <span className="bg-primary/20 text-primary text-[10px] font-mono px-1.5 py-0.5 rounded-sm">
+                    {interviews.length}
+                  </span>
+                )}
+              </button>
             </div>
+
+            {/* Activity tab */}
+            {activeTab === "activity" && (
+              <div className="flex flex-col gap-4">
+                {isFeedLoading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-32 w-full bg-secondary" />
+                  ))
+                ) : feedData && feedData.length > 0 ? (
+                  feedData.map((item) => (
+                    <FeedCard key={item.id} item={item} />
+                  ))
+                ) : (
+                  <div className="border border-border/50 bg-secondary/10 p-8 text-center font-mono text-muted-foreground">
+                    NO_ACTIVITY_RECORDED
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Interviews tab */}
+            {activeTab === "interviews" && (
+              <div className="space-y-4">
+                {isInterviewsLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Array(2).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-72 w-full bg-secondary" />
+                    ))}
+                  </div>
+                ) : interviews && interviews.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {interviews.slice(0, 4).map((iv) => (
+                        <InterviewCard key={iv.id} interview={{ ...iv, personId: id, personName: person?.name ?? null }} compact />
+                      ))}
+                    </div>
+                    {interviews.length >= 4 && (
+                      <div className="text-center pt-2">
+                        <Link
+                          href={`/interviews?personId=${id}`}
+                          className="inline-flex items-center gap-2 text-xs font-mono text-primary border border-primary/40 px-4 py-2 hover:bg-primary/10 transition-colors"
+                        >
+                          VIEW_ALL_INTERVIEWS →
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="border border-border/50 bg-secondary/10 p-8 text-center font-mono text-muted-foreground">
+                    NO_INTERVIEWS_INDEXED
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
         </div>

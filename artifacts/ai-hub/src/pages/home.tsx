@@ -1,12 +1,28 @@
 import { useGetFeatured, useGetStats } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity, ChevronRight } from "lucide-react";
+import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity, ChevronRight, Film } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
+import { InterviewCard, type InterviewItem } from "@/components/interview-card";
 import { useState, useEffect, useRef } from "react";
 import { PREDICTIONS, computeComposite } from "@/lib/agi";
 import { VisitorHeatmap } from "@/components/visitor-heatmap";
+import { useQuery } from "@tanstack/react-query";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function useLatestInterviews() {
+  return useQuery<{ items: InterviewItem[] }>({
+    queryKey: ["latest-interviews"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/interviews?limit=6`);
+      if (!res.ok) throw new Error("Failed to fetch interviews");
+      return res.json();
+    },
+    staleTime: 5 * 60_000,
+  });
+}
 
 function useAgiCountdown() {
   const [now, setNow] = useState(new Date());
@@ -221,6 +237,7 @@ export default function Home() {
   const countdown = useAgiCountdown();
   const feedMinsAgo = useFeedStatus();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: interviewsData, isLoading: isInterviewsLoading } = useLatestInterviews();
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -465,6 +482,32 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Latest Interviews */}
+      {(isInterviewsLoading || (interviewsData?.items && interviewsData.items.length > 0)) && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between border-b border-border/50 pb-2">
+            <h2 className="text-xl font-bold font-mono text-foreground flex items-center gap-2">
+              <Film className="h-5 w-5 text-primary" />
+              LATEST_INTERVIEWS
+            </h2>
+            <Link href="/interviews" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              VIEW_ALL <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+            {isInterviewsLoading ? (
+              Array(4).fill(0).map((_, i) => (
+                <Skeleton key={i} className="h-80 w-72 shrink-0 bg-secondary" />
+              ))
+            ) : (
+              interviewsData?.items.map((iv) => (
+                <InterviewCard key={iv.id} interview={iv} compact />
+              ))
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Directory Access */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-border/50">

@@ -13,6 +13,8 @@ import commentsRouter from "./comments";
 import submissionsRouter from "./submissions";
 import digestRouter from "./digest";
 import myFeedRouter from "./my-feed";
+import interviewsRouter from "./interviews";
+import journeyRouter from "./journey";
 
 const router: IRouter = Router();
 
@@ -30,5 +32,7 @@ router.use(commentsRouter);
 router.use(submissionsRouter);
 router.use(digestRouter);
 router.use(myFeedRouter);
+router.use(interviewsRouter);
+router.use(journeyRouter);
 
 export default router;
