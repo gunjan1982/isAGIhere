@@ -17,24 +17,35 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AiJourneyProfile,
+  AiToolUsage,
   Community,
+  CommunityProfile,
+  DeleteJourneyModelReview200,
+  DeleteJourneyTool200,
   FeaturedContent,
   FeedItem,
   FeedPage,
+  FrontierModelReview,
   GetFeedParams,
   GetPersonFeedParams,
   HealthStatus,
   HubStats,
   ListCommunitiesParams,
+  ListJourneyFeedParams,
+  ListJourneyModelReviewsParams,
   ListPeopleParams,
   ListSourcesParams,
+  ModelRatingAggregate,
   Person,
   RefreshResult,
+  SaveJourneyModelReview200,
+  SaveJourneyTool200,
   Source,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -498,6 +509,937 @@ export function useListSources<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List public AI Journey profiles
+ */
+export const getListJourneyFeedUrl = (params?: ListJourneyFeedParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/journey/feed?${stringifiedParams}`
+    : `/api/journey/feed`;
+};
+
+export const listJourneyFeed = async (
+  params?: ListJourneyFeedParams,
+  options?: RequestInit,
+): Promise<CommunityProfile[]> => {
+  return customFetch<CommunityProfile[]>(getListJourneyFeedUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListJourneyFeedQueryKey = (params?: ListJourneyFeedParams) => {
+  return [`/api/journey/feed`, ...(params ? [params] : [])] as const;
+};
+
+export const getListJourneyFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof listJourneyFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListJourneyFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listJourneyFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListJourneyFeedQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listJourneyFeed>>> = ({
+    signal,
+  }) => listJourneyFeed(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listJourneyFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListJourneyFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listJourneyFeed>>
+>;
+export type ListJourneyFeedQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List public AI Journey profiles
+ */
+
+export function useListJourneyFeed<
+  TData = Awaited<ReturnType<typeof listJourneyFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListJourneyFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listJourneyFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListJourneyFeedQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get the authenticated user's AI Journey profile
+ */
+export const getGetJourneyProfileUrl = () => {
+  return `/api/journey/profile`;
+};
+
+export const getJourneyProfile = async (
+  options?: RequestInit,
+): Promise<AiJourneyProfile | null> => {
+  return customFetch<AiJourneyProfile | null>(getGetJourneyProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetJourneyProfileQueryKey = () => {
+  return [`/api/journey/profile`] as const;
+};
+
+export const getGetJourneyProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJourneyProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getJourneyProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetJourneyProfileQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getJourneyProfile>>
+  > = ({ signal }) => getJourneyProfile({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getJourneyProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetJourneyProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getJourneyProfile>>
+>;
+export type GetJourneyProfileQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the authenticated user's AI Journey profile
+ */
+
+export function useGetJourneyProfile<
+  TData = Awaited<ReturnType<typeof getJourneyProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getJourneyProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetJourneyProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update the authenticated user's AI Journey profile
+ */
+export const getSaveJourneyProfileUrl = () => {
+  return `/api/journey/profile`;
+};
+
+export const saveJourneyProfile = async (
+  aiJourneyProfile: AiJourneyProfile,
+  options?: RequestInit,
+): Promise<AiJourneyProfile> => {
+  return customFetch<AiJourneyProfile>(getSaveJourneyProfileUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(aiJourneyProfile),
+  });
+};
+
+export const getSaveJourneyProfileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyProfile>>,
+    TError,
+    { data: BodyType<AiJourneyProfile> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveJourneyProfile>>,
+  TError,
+  { data: BodyType<AiJourneyProfile> },
+  TContext
+> => {
+  const mutationKey = ["saveJourneyProfile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveJourneyProfile>>,
+    { data: BodyType<AiJourneyProfile> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveJourneyProfile(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveJourneyProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveJourneyProfile>>
+>;
+export type SaveJourneyProfileMutationBody = BodyType<AiJourneyProfile>;
+export type SaveJourneyProfileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update the authenticated user's AI Journey profile
+ */
+export const useSaveJourneyProfile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyProfile>>,
+    TError,
+    { data: BodyType<AiJourneyProfile> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveJourneyProfile>>,
+  TError,
+  { data: BodyType<AiJourneyProfile> },
+  TContext
+> => {
+  return useMutation(getSaveJourneyProfileMutationOptions(options));
+};
+
+/**
+ * @summary List the authenticated user's AI tool usage
+ */
+export const getListMyJourneyToolsUrl = () => {
+  return `/api/journey/tools/mine`;
+};
+
+export const listMyJourneyTools = async (
+  options?: RequestInit,
+): Promise<AiToolUsage[]> => {
+  return customFetch<AiToolUsage[]>(getListMyJourneyToolsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyJourneyToolsQueryKey = () => {
+  return [`/api/journey/tools/mine`] as const;
+};
+
+export const getListMyJourneyToolsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyJourneyTools>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyTools>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyJourneyToolsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyJourneyTools>>
+  > = ({ signal }) => listMyJourneyTools({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyTools>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyJourneyToolsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyJourneyTools>>
+>;
+export type ListMyJourneyToolsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the authenticated user's AI tool usage
+ */
+
+export function useListMyJourneyTools<
+  TData = Awaited<ReturnType<typeof listMyJourneyTools>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyTools>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyJourneyToolsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add or update an AI tool usage entry for the authenticated user
+ */
+export const getSaveJourneyToolUrl = () => {
+  return `/api/journey/tools`;
+};
+
+export const saveJourneyTool = async (
+  aiToolUsage: AiToolUsage,
+  options?: RequestInit,
+): Promise<SaveJourneyTool200> => {
+  return customFetch<SaveJourneyTool200>(getSaveJourneyToolUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(aiToolUsage),
+  });
+};
+
+export const getSaveJourneyToolMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyTool>>,
+    TError,
+    { data: BodyType<AiToolUsage> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveJourneyTool>>,
+  TError,
+  { data: BodyType<AiToolUsage> },
+  TContext
+> => {
+  const mutationKey = ["saveJourneyTool"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveJourneyTool>>,
+    { data: BodyType<AiToolUsage> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveJourneyTool(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveJourneyToolMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveJourneyTool>>
+>;
+export type SaveJourneyToolMutationBody = BodyType<AiToolUsage>;
+export type SaveJourneyToolMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add or update an AI tool usage entry for the authenticated user
+ */
+export const useSaveJourneyTool = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyTool>>,
+    TError,
+    { data: BodyType<AiToolUsage> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveJourneyTool>>,
+  TError,
+  { data: BodyType<AiToolUsage> },
+  TContext
+> => {
+  return useMutation(getSaveJourneyToolMutationOptions(options));
+};
+
+/**
+ * @summary Delete a tool usage entry
+ */
+export const getDeleteJourneyToolUrl = (id: number) => {
+  return `/api/journey/tools/${id}`;
+};
+
+export const deleteJourneyTool = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteJourneyTool200> => {
+  return customFetch<DeleteJourneyTool200>(getDeleteJourneyToolUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteJourneyToolMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteJourneyTool>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteJourneyTool>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteJourneyTool"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteJourneyTool>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteJourneyTool(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteJourneyToolMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteJourneyTool>>
+>;
+
+export type DeleteJourneyToolMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a tool usage entry
+ */
+export const useDeleteJourneyTool = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteJourneyTool>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteJourneyTool>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteJourneyToolMutationOptions(options));
+};
+
+/**
+ * @summary List public aggregate ratings for frontier models
+ */
+export const getListJourneyModelRatingsUrl = () => {
+  return `/api/journey/models`;
+};
+
+export const listJourneyModelRatings = async (
+  options?: RequestInit,
+): Promise<ModelRatingAggregate[]> => {
+  return customFetch<ModelRatingAggregate[]>(getListJourneyModelRatingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListJourneyModelRatingsQueryKey = () => {
+  return [`/api/journey/models`] as const;
+};
+
+export const getListJourneyModelRatingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listJourneyModelRatings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listJourneyModelRatings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListJourneyModelRatingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listJourneyModelRatings>>
+  > = ({ signal }) => listJourneyModelRatings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listJourneyModelRatings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListJourneyModelRatingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listJourneyModelRatings>>
+>;
+export type ListJourneyModelRatingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List public aggregate ratings for frontier models
+ */
+
+export function useListJourneyModelRatings<
+  TData = Awaited<ReturnType<typeof listJourneyModelRatings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listJourneyModelRatings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListJourneyModelRatingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update a frontier model review for the authenticated user
+ */
+export const getSaveJourneyModelReviewUrl = () => {
+  return `/api/journey/models`;
+};
+
+export const saveJourneyModelReview = async (
+  frontierModelReview: FrontierModelReview,
+  options?: RequestInit,
+): Promise<SaveJourneyModelReview200> => {
+  return customFetch<SaveJourneyModelReview200>(
+    getSaveJourneyModelReviewUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(frontierModelReview),
+    },
+  );
+};
+
+export const getSaveJourneyModelReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyModelReview>>,
+    TError,
+    { data: BodyType<FrontierModelReview> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveJourneyModelReview>>,
+  TError,
+  { data: BodyType<FrontierModelReview> },
+  TContext
+> => {
+  const mutationKey = ["saveJourneyModelReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveJourneyModelReview>>,
+    { data: BodyType<FrontierModelReview> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveJourneyModelReview(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveJourneyModelReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveJourneyModelReview>>
+>;
+export type SaveJourneyModelReviewMutationBody = BodyType<FrontierModelReview>;
+export type SaveJourneyModelReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update a frontier model review for the authenticated user
+ */
+export const useSaveJourneyModelReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveJourneyModelReview>>,
+    TError,
+    { data: BodyType<FrontierModelReview> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveJourneyModelReview>>,
+  TError,
+  { data: BodyType<FrontierModelReview> },
+  TContext
+> => {
+  return useMutation(getSaveJourneyModelReviewMutationOptions(options));
+};
+
+/**
+ * @summary List recent public frontier model reviews
+ */
+export const getListJourneyModelReviewsUrl = (
+  params?: ListJourneyModelReviewsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/journey/models/reviews?${stringifiedParams}`
+    : `/api/journey/models/reviews`;
+};
+
+export const listJourneyModelReviews = async (
+  params?: ListJourneyModelReviewsParams,
+  options?: RequestInit,
+): Promise<FrontierModelReview[]> => {
+  return customFetch<FrontierModelReview[]>(
+    getListJourneyModelReviewsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListJourneyModelReviewsQueryKey = (
+  params?: ListJourneyModelReviewsParams,
+) => {
+  return [`/api/journey/models/reviews`, ...(params ? [params] : [])] as const;
+};
+
+export const getListJourneyModelReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listJourneyModelReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListJourneyModelReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listJourneyModelReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListJourneyModelReviewsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listJourneyModelReviews>>
+  > = ({ signal }) =>
+    listJourneyModelReviews(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listJourneyModelReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListJourneyModelReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listJourneyModelReviews>>
+>;
+export type ListJourneyModelReviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List recent public frontier model reviews
+ */
+
+export function useListJourneyModelReviews<
+  TData = Awaited<ReturnType<typeof listJourneyModelReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListJourneyModelReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listJourneyModelReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListJourneyModelReviewsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List the authenticated user's frontier model reviews
+ */
+export const getListMyJourneyModelReviewsUrl = () => {
+  return `/api/journey/models/mine`;
+};
+
+export const listMyJourneyModelReviews = async (
+  options?: RequestInit,
+): Promise<FrontierModelReview[]> => {
+  return customFetch<FrontierModelReview[]>(getListMyJourneyModelReviewsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyJourneyModelReviewsQueryKey = () => {
+  return [`/api/journey/models/mine`] as const;
+};
+
+export const getListMyJourneyModelReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyJourneyModelReviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyModelReviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMyJourneyModelReviewsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyJourneyModelReviews>>
+  > = ({ signal }) => listMyJourneyModelReviews({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyModelReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyJourneyModelReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyJourneyModelReviews>>
+>;
+export type ListMyJourneyModelReviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the authenticated user's frontier model reviews
+ */
+
+export function useListMyJourneyModelReviews<
+  TData = Awaited<ReturnType<typeof listMyJourneyModelReviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJourneyModelReviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyJourneyModelReviewsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete a frontier model review
+ */
+export const getDeleteJourneyModelReviewUrl = (id: number) => {
+  return `/api/journey/models/${id}`;
+};
+
+export const deleteJourneyModelReview = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteJourneyModelReview200> => {
+  return customFetch<DeleteJourneyModelReview200>(
+    getDeleteJourneyModelReviewUrl(id),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteJourneyModelReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteJourneyModelReview>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteJourneyModelReview>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteJourneyModelReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteJourneyModelReview>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteJourneyModelReview(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteJourneyModelReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteJourneyModelReview>>
+>;
+
+export type DeleteJourneyModelReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a frontier model review
+ */
+export const useDeleteJourneyModelReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteJourneyModelReview>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteJourneyModelReview>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteJourneyModelReviewMutationOptions(options));
+};
 
 /**
  * @summary List all communities

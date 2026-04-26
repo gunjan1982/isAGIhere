@@ -111,8 +111,262 @@ export const ListSourcesResponseItem = zod.object({
   host: zod.string().optional(),
   bestFor: zod.string().optional(),
   isHighSignal: zod.boolean().optional(),
+  youtubeChannelId: zod.string().nullish(),
+  isInterviewChannel: zod.boolean().optional(),
+  featuredPeopleIds: zod.string().nullish(),
 });
 export const ListSourcesResponse = zod.array(ListSourcesResponseItem);
+
+/**
+ * @summary List public AI Journey profiles
+ */
+export const listJourneyFeedQueryLimitDefault = 20;
+export const listJourneyFeedQueryOffsetDefault = 0;
+
+export const ListJourneyFeedQueryParams = zod.object({
+  limit: zod.coerce.number().default(listJourneyFeedQueryLimitDefault),
+  offset: zod.coerce.number().default(listJourneyFeedQueryOffsetDefault),
+});
+
+export const ListJourneyFeedResponseItem = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  displayName: zod.string().optional(),
+  currentRole: zod.string().optional(),
+  aiExperienceLevel: zod.string().optional(),
+  currentlyWorkingOn: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  bio: zod.string().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+export const ListJourneyFeedResponse = zod.array(ListJourneyFeedResponseItem);
+
+/**
+ * @summary Get the authenticated user's AI Journey profile
+ */
+export const GetJourneyProfileResponse = zod.union([
+  zod.object({
+    id: zod.number().optional(),
+    userId: zod.string().optional(),
+    displayName: zod.string().optional(),
+    currentRole: zod.string().optional(),
+    aiExperienceLevel: zod.string().optional(),
+    currentlyWorkingOn: zod.string().optional(),
+    primaryUseCase: zod.string().optional(),
+    bio: zod.string().optional(),
+    isPublic: zod.boolean().optional(),
+    updatedAt: zod.coerce.date().optional(),
+    createdAt: zod.coerce.date().optional(),
+  }),
+  zod.null(),
+]);
+
+/**
+ * @summary Create or update the authenticated user's AI Journey profile
+ */
+export const SaveJourneyProfileBody = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  displayName: zod.string().optional(),
+  currentRole: zod.string().optional(),
+  aiExperienceLevel: zod.string().optional(),
+  currentlyWorkingOn: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  bio: zod.string().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+export const SaveJourneyProfileResponse = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  displayName: zod.string().optional(),
+  currentRole: zod.string().optional(),
+  aiExperienceLevel: zod.string().optional(),
+  currentlyWorkingOn: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  bio: zod.string().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary List the authenticated user's AI tool usage
+ */
+export const ListMyJourneyToolsResponseItem = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  toolName: zod.string().optional(),
+  toolCategory: zod.string().optional(),
+  useCase: zod.string().optional(),
+  frequency: zod.string().optional(),
+  rating: zod.number().optional(),
+  notes: zod.string().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+export const ListMyJourneyToolsResponse = zod.array(
+  ListMyJourneyToolsResponseItem,
+);
+
+/**
+ * @summary Add or update an AI tool usage entry for the authenticated user
+ */
+export const SaveJourneyToolBody = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  toolName: zod.string().optional(),
+  toolCategory: zod.string().optional(),
+  useCase: zod.string().optional(),
+  frequency: zod.string().optional(),
+  rating: zod.number().optional(),
+  notes: zod.string().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+export const SaveJourneyToolResponse = zod.object({
+  ok: zod.boolean().optional(),
+});
+
+/**
+ * @summary Delete a tool usage entry
+ */
+export const DeleteJourneyToolParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteJourneyToolResponse = zod.object({
+  ok: zod.boolean().optional(),
+});
+
+/**
+ * @summary List public aggregate ratings for frontier models
+ */
+export const ListJourneyModelRatingsResponseItem = zod.object({
+  provider: zod.string().optional(),
+  modelName: zod.string().optional(),
+  avgRating: zod.number().optional(),
+  reviewCount: zod.number().optional(),
+});
+export const ListJourneyModelRatingsResponse = zod.array(
+  ListJourneyModelRatingsResponseItem,
+);
+
+/**
+ * @summary Create or update a frontier model review for the authenticated user
+ */
+export const SaveJourneyModelReviewBody = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  provider: zod.string().optional(),
+  modelName: zod.string().optional(),
+  modelVersion: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  usagePeriodStart: zod.string().optional(),
+  usagePeriodEnd: zod.string().optional(),
+  lastUsedAt: zod.coerce.date().optional(),
+  overallRating: zod.number().optional(),
+  reasoningRating: zod.number().optional(),
+  codingRating: zod.number().optional(),
+  creativeRating: zod.number().optional(),
+  speedRating: zod.number().optional(),
+  strengths: zod.string().optional(),
+  weaknesses: zod.string().optional(),
+  review: zod.string().optional(),
+  wouldRecommend: zod.boolean().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+export const SaveJourneyModelReviewResponse = zod.object({
+  ok: zod.boolean().optional(),
+});
+
+/**
+ * @summary List recent public frontier model reviews
+ */
+export const listJourneyModelReviewsQueryLimitDefault = 20;
+
+export const ListJourneyModelReviewsQueryParams = zod.object({
+  limit: zod.coerce.number().default(listJourneyModelReviewsQueryLimitDefault),
+  model: zod.coerce.string().optional(),
+});
+
+export const ListJourneyModelReviewsResponseItem = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  provider: zod.string().optional(),
+  modelName: zod.string().optional(),
+  modelVersion: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  usagePeriodStart: zod.string().optional(),
+  usagePeriodEnd: zod.string().optional(),
+  lastUsedAt: zod.coerce.date().optional(),
+  overallRating: zod.number().optional(),
+  reasoningRating: zod.number().optional(),
+  codingRating: zod.number().optional(),
+  creativeRating: zod.number().optional(),
+  speedRating: zod.number().optional(),
+  strengths: zod.string().optional(),
+  weaknesses: zod.string().optional(),
+  review: zod.string().optional(),
+  wouldRecommend: zod.boolean().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+export const ListJourneyModelReviewsResponse = zod.array(
+  ListJourneyModelReviewsResponseItem,
+);
+
+/**
+ * @summary List the authenticated user's frontier model reviews
+ */
+export const ListMyJourneyModelReviewsResponseItem = zod.object({
+  id: zod.number().optional(),
+  userId: zod.string().optional(),
+  provider: zod.string().optional(),
+  modelName: zod.string().optional(),
+  modelVersion: zod.string().optional(),
+  primaryUseCase: zod.string().optional(),
+  usagePeriodStart: zod.string().optional(),
+  usagePeriodEnd: zod.string().optional(),
+  lastUsedAt: zod.coerce.date().optional(),
+  overallRating: zod.number().optional(),
+  reasoningRating: zod.number().optional(),
+  codingRating: zod.number().optional(),
+  creativeRating: zod.number().optional(),
+  speedRating: zod.number().optional(),
+  strengths: zod.string().optional(),
+  weaknesses: zod.string().optional(),
+  review: zod.string().optional(),
+  wouldRecommend: zod.boolean().optional(),
+  isPublic: zod.boolean().optional(),
+  updatedAt: zod.coerce.date().optional(),
+  createdAt: zod.coerce.date().optional(),
+});
+export const ListMyJourneyModelReviewsResponse = zod.array(
+  ListMyJourneyModelReviewsResponseItem,
+);
+
+/**
+ * @summary Delete a frontier model review
+ */
+export const DeleteJourneyModelReviewParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteJourneyModelReviewResponse = zod.object({
+  ok: zod.boolean().optional(),
+});
 
 /**
  * @summary List all communities
@@ -178,6 +432,9 @@ export const GetFeaturedResponse = zod.object({
       host: zod.string().optional(),
       bestFor: zod.string().optional(),
       isHighSignal: zod.boolean().optional(),
+      youtubeChannelId: zod.string().nullish(),
+      isInterviewChannel: zod.boolean().optional(),
+      featuredPeopleIds: zod.string().nullish(),
     }),
   ),
   topPodcasts: zod.array(
@@ -193,6 +450,9 @@ export const GetFeaturedResponse = zod.object({
       host: zod.string().optional(),
       bestFor: zod.string().optional(),
       isHighSignal: zod.boolean().optional(),
+      youtubeChannelId: zod.string().nullish(),
+      isInterviewChannel: zod.boolean().optional(),
+      featuredPeopleIds: zod.string().nullish(),
     }),
   ),
   vibeCodingVoices: zod.array(

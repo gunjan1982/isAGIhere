@@ -37,6 +37,82 @@ export interface Source {
   host?: string;
   bestFor?: string;
   isHighSignal?: boolean;
+  youtubeChannelId?: string | null;
+  isInterviewChannel?: boolean;
+  featuredPeopleIds?: string | null;
+}
+
+export interface AiJourneyProfile {
+  id?: number;
+  userId?: string;
+  displayName?: string;
+  currentRole?: string;
+  aiExperienceLevel?: string;
+  currentlyWorkingOn?: string;
+  primaryUseCase?: string;
+  bio?: string;
+  isPublic?: boolean;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+export interface AiToolUsage {
+  id?: number;
+  userId?: string;
+  toolName?: string;
+  toolCategory?: string;
+  useCase?: string;
+  frequency?: string;
+  rating?: number;
+  notes?: string;
+  isPublic?: boolean;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+export interface FrontierModelReview {
+  id?: number;
+  userId?: string;
+  provider?: string;
+  modelName?: string;
+  modelVersion?: string;
+  primaryUseCase?: string;
+  usagePeriodStart?: string;
+  usagePeriodEnd?: string;
+  lastUsedAt?: string;
+  overallRating?: number;
+  reasoningRating?: number;
+  codingRating?: number;
+  creativeRating?: number;
+  speedRating?: number;
+  strengths?: string;
+  weaknesses?: string;
+  review?: string;
+  wouldRecommend?: boolean;
+  isPublic?: boolean;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+export interface ModelRatingAggregate {
+  provider?: string;
+  modelName?: string;
+  avgRating?: number;
+  reviewCount?: number;
+}
+
+export interface CommunityProfile {
+  id?: number;
+  userId?: string;
+  displayName?: string;
+  currentRole?: string;
+  aiExperienceLevel?: string;
+  currentlyWorkingOn?: string;
+  primaryUseCase?: string;
+  bio?: string;
+  isPublic?: boolean;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export interface Community {
@@ -120,6 +196,32 @@ export const ListSourcesType = {
   youtube: "youtube",
   news_site: "news_site",
 } as const;
+
+export type ListJourneyFeedParams = {
+  limit?: number;
+  offset?: number;
+};
+
+export type SaveJourneyTool200 = {
+  ok?: boolean;
+};
+
+export type DeleteJourneyTool200 = {
+  ok?: boolean;
+};
+
+export type SaveJourneyModelReview200 = {
+  ok?: boolean;
+};
+
+export type ListJourneyModelReviewsParams = {
+  limit?: number;
+  model?: string;
+};
+
+export type DeleteJourneyModelReview200 = {
+  ok?: boolean;
+};
 
 export type ListCommunitiesParams = {
   platform?: ListCommunitiesPlatform;

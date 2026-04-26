@@ -18,4 +18,7 @@ export interface Source {
   host?: string;
   bestFor?: string;
   isHighSignal?: boolean;
+  youtubeChannelId?: string | null;
+  isInterviewChannel?: boolean;
+  featuredPeopleIds?: string | null;
 }

@@ -6,10 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./aiJourneyProfile";
+export * from "./aiToolUsage";
 export * from "./community";
+export * from "./communityProfile";
+export * from "./deleteJourneyModelReview200";
+export * from "./deleteJourneyTool200";
 export * from "./featuredContent";
 export * from "./feedItem";
 export * from "./feedPage";
+export * from "./frontierModelReview";
 export * from "./getFeedParams";
 export * from "./getPersonFeedParams";
 export * from "./healthStatus";
@@ -18,9 +24,14 @@ export * from "./hubStatsCategoryCounts";
 export * from "./hubStatsSourceTypeCounts";
 export * from "./listCommunitiesParams";
 export * from "./listCommunitiesPlatform";
+export * from "./listJourneyFeedParams";
+export * from "./listJourneyModelReviewsParams";
 export * from "./listPeopleParams";
 export * from "./listSourcesParams";
 export * from "./listSourcesType";
+export * from "./modelRatingAggregate";
 export * from "./person";
 export * from "./refreshResult";
+export * from "./saveJourneyModelReview200";
+export * from "./saveJourneyTool200";
 export * from "./source";
