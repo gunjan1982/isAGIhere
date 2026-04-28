@@ -55,13 +55,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --memory 512Mi \
   --cpu 1 \
   --timeout 300 \
-  --set-env-vars \
-    DATABASE_URL="$CLOUD_RUN_DATABASE_URL",\
-    GOOGLE_CLOUD_PROJECT="$PROJECT_ID",\
-    GOOGLE_CLOUD_LOCATION="$REGION",\
-    CLERK_SECRET_KEY="$CLERK_SECRET_KEY",\
-    RESEND_API_KEY="$RESEND_API_KEY",\
-    LOG_LEVEL="${LOG_LEVEL:-info}" \
+  --set-env-vars "DATABASE_URL=$CLOUD_RUN_DATABASE_URL,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION,CLERK_SECRET_KEY=$CLERK_SECRET_KEY,RESEND_API_KEY=$RESEND_API_KEY,LOG_LEVEL=${LOG_LEVEL:-info}" \
   --set-cloudsql-instances "$SQL_INSTANCE"
 
 echo "Deployment complete. Run 'gcloud run services describe $SERVICE_NAME --region $REGION --format=truthy' to inspect the service."
