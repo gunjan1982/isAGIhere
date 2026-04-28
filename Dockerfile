@@ -7,7 +7,9 @@ RUN npm install -g pnpm
 
 COPY . .
 
-RUN pnpm install
+# Delete the macOS-generated lockfile so pnpm resolves platform-specific
+# optional deps (e.g. @rollup/rollup-linux-x64-musl) for Alpine Linux.
+RUN rm -f pnpm-lock.yaml && pnpm install
 
 ARG VITE_PORT=5173
 ARG BASE_PATH=/
