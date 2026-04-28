@@ -5,8 +5,33 @@ import { useUserHub, useFollowMutations, useCustomSourceMutations, useMyFeed } f
 import { AddCustomSourceModal } from "@/components/add-custom-source-modal";
 import {
   LayoutDashboard, Users, Radio, MessageSquare, Plus, Trash2,
-  ExternalLink, Globe, Youtube, Twitter, Loader2, LogIn, Rss, Clock
+  ExternalLink, Globe, Youtube, Twitter, Loader2, LogIn, Rss, Clock, Cpu, ArrowRight
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type JourneyProfile = {
+  id: number;
+  displayName: string | null;
+  experienceLevel: string | null;
+  primaryUseCases: string | null;
+  isPublic: boolean;
+  updatedAt: string | null;
+};
+
+function useMyJourneyProfile() {
+  return useQuery<JourneyProfile | null>({
+    queryKey: ["journey-profile-mine"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/journey/profile`, { credentials: "include" });
+      if (res.status === 401) return null;
+      if (!res.ok) throw new Error("Failed to fetch journey profile");
+      return res.json();
+    },
+    staleTime: 5 * 60_000,
+  });
+}
 
 const PLATFORM_ICON: Record<string, any> = {
   youtube: Youtube,
@@ -294,8 +319,69 @@ function HubContent() {
         )}
       </section>
 
+      {/* MY AI Journey */}
+      <MyJourneySection />
+
       {showAddSource && <AddCustomSourceModal onClose={() => setShowAddSource(false)} />}
     </div>
+  );
+}
+
+function MyJourneySection() {
+  const { data: profile, isLoading } = useMyJourneyProfile();
+
+  return (
+    <section className="space-y-3">
+      <h2 className="font-mono text-sm font-bold tracking-widest text-primary border-b border-border/40 pb-2 flex items-center justify-between">
+        <span className="flex items-center gap-2"><Cpu className="h-4 w-4" /> MY_AI_JOURNEY</span>
+        <Link href="/my-journey" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+          OPEN <ArrowRight className="h-3 w-3" />
+        </Link>
+      </h2>
+
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-muted-foreground font-mono text-sm py-4 justify-center">
+          <Loader2 className="h-4 w-4 animate-spin" /> LOADING...
+        </div>
+      ) : profile ? (
+        <Link
+          href="/my-journey"
+          className="block border border-border/50 bg-card p-4 hover:border-primary/40 hover:bg-primary/5 transition-colors group"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-bold font-mono text-sm group-hover:text-primary transition-colors">
+                {profile.displayName ?? "MY_PROFILE"}
+              </div>
+              <div className="text-xs font-mono text-muted-foreground mt-0.5 flex items-center gap-2">
+                {profile.experienceLevel && (
+                  <span className="uppercase tracking-wider">{profile.experienceLevel.replace(/_/g, " ")}</span>
+                )}
+                {profile.isPublic ? (
+                  <span className="text-green-500/70">● PUBLIC</span>
+                ) : (
+                  <span className="text-muted-foreground/50">● PRIVATE</span>
+                )}
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+          </div>
+        </Link>
+      ) : (
+        <div className="border border-dashed border-border/40 p-6 flex flex-col items-center gap-3 text-center">
+          <Cpu className="h-7 w-7 text-muted-foreground/20" />
+          <p className="text-sm font-mono text-muted-foreground">
+            Log your AI tool usage, rate frontier models, and share your experience with the community.
+          </p>
+          <Link
+            href="/my-journey"
+            className="text-xs font-mono text-primary border border-primary/40 px-4 py-2 hover:bg-primary/10 transition-colors"
+          >
+            SET_UP_MY_JOURNEY →
+          </Link>
+        </div>
+      )}
+    </section>
   );
 }
 

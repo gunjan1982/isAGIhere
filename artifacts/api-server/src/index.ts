@@ -1,9 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedIfEmpty, updateSeedData } from "./lib/seed";
-import { refreshFeeds } from "./lib/rss-fetcher";
 import { buildDigestAndSendToAll } from "./lib/digest-scheduler";
-import { startInterviewScheduler } from "./lib/youtube-fetcher";
 
 const rawPort = process.env["PORT"];
 
@@ -19,8 +17,6 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-
 app.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
@@ -29,23 +25,13 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  // Seed static data if empty, apply any new entries, then kick off first feed refresh
+  // Seed static data if empty, apply any new entries
   seedIfEmpty()
     .then(() => updateSeedData())
-    .then(() => refreshFeeds())
-    .then((count) => logger.info({ count }, "Initial feed refresh complete"))
     .catch((e) => logger.error({ err: e }, "Startup background tasks failed"));
-
-  // Periodic feed refresh every 15 minutes
-  setInterval(() => {
-    refreshFeeds().catch((e) => logger.error({ err: e }, "Periodic feed refresh failed"));
-  }, REFRESH_INTERVAL_MS);
 
   // Weekly digest scheduler — fires every Monday at 08:00 UTC
   scheduleWeeklyDigest();
-
-  // YouTube interview fetcher — runs every hour
-  startInterviewScheduler();
 });
 
 function scheduleWeeklyDigest() {

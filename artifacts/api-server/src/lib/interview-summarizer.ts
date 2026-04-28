@@ -1,10 +1,16 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { VertexAI } from "@google-cloud/vertexai";
 import { db } from "@workspace/db";
 import { interviewsTable } from "@workspace/db/schema";
 import { isNull, isNotNull, and, eq } from "drizzle-orm";
 import { logger } from "./logger";
 
-const anthropic = new Anthropic(); // uses ANTHROPIC_API_KEY env var
+// Uses Application Default Credentials on Cloud Run (no API key needed).
+// Requires GOOGLE_CLOUD_PROJECT env var, or falls back to GCP metadata server.
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT ?? process.env.GCLOUD_PROJECT ?? "";
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
+
+const vertexAI = new VertexAI({ project: PROJECT_ID, location: LOCATION });
+const model = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
 
 const SUMMARY_PROMPT = (title: string, description: string) => `
 You are an AI analyst for isagihere.wiki, a platform tracking AI industry progress.
@@ -42,16 +48,12 @@ export async function generateMissingSummaries(batchSize = 5): Promise<number> {
   let processed = 0;
   for (const interview of pending) {
     try {
-      const response = await anthropic.messages.create({
-        model: "claude-haiku-4-5",
-        max_tokens: 512,
-        messages: [{
-          role: "user",
-          content: SUMMARY_PROMPT(interview.title, interview.description ?? ""),
-        }],
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: SUMMARY_PROMPT(interview.title, interview.description ?? "") }] }],
+        generationConfig: { maxOutputTokens: 512, responseMimeType: "application/json" },
       });
 
-      const text = response.content[0]?.type === "text" ? response.content[0].text : null;
+      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
       if (!text) continue;
 
       let parsed: { summary?: string; keyTakeaways?: string[]; topics?: string[] } | null = null;

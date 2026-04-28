@@ -155,3 +155,78 @@ gate: passed — Feature 3 started
 **Next actions:**
 - [ ] Verify new journey API endpoints with authenticated requests once the backend is running locally
 - [ ] Add `my-journey` to the mobile nav or signup nudge flows in future refinement
+
+---
+date: 2026-04-14 IST
+tool: Claude Code
+model: claude-sonnet-4-7
+gate: passed — all v2 frontend complete
+---
+**Objective:** Complete the two remaining frontend items from Feature 3 and sync TECH_CONTEXT.md with actual repo state.
+
+**Status:** complete — all v2 code done locally, pending Replit deploy
+
+**Changes made:**
+- `artifacts/ai-hub/src/pages/home.tsx` — added `COMMUNITY_PULSE` section before Directory Access; queries `GET /api/journey/models` for aggregated model ratings; shows star-rating leaderboard grid (up to 8 models); graceful empty-state with "START_MY_AI_JOURNEY →" CTA; added `Cpu` + `Star` icons
+- `artifacts/ai-hub/src/pages/my-hub.tsx` — added `MY_AI_JOURNEY` section after Custom Sources; new `useMyJourneyProfile()` hook calls `GET /api/journey/profile`; shows compact profile card (display name, experience level, public/private badge) if profile exists; shows "SET_UP_MY_JOURNEY →" CTA if not; added `Cpu` + `ArrowRight` imports
+- `docs/TECH_CONTEXT.md` — updated all three feature build-state tables to reflect actual repo state (Features 1/2/3 all ✅ locally); updated Known Bugs table (bugs #2/#3 fixed, replaced with accurate Replit deploy blockers); updated Recent Significant Changes rolling window
+
+**Key decisions:**
+- Community Pulse uses `parseFloat(row.avgRating)` + `Math.round()` for star display — avgRating from Drizzle `avg()` is returned as string, not number
+- `useMyJourneyProfile()` returns `null` on 401 (unauthenticated) rather than throwing — safe for signed-out state in My Hub
+- Both sections handle loading + empty states consistently with the rest of the codebase design language (dashed border, muted icon, font-mono labels)
+
+**Open loops (Replit — required to go live):**
+- [ ] `pnpm --filter @workspace/db run push` — applies ALL schema changes (interviews, people columns, sources columns, journey tables)
+- [ ] `pnpm add @anthropic-ai/sdk --filter @workspace/api-server` — installs Anthropic SDK
+- [ ] Add `ANTHROPIC_API_KEY` to Replit Secrets
+- [ ] `pnpm --filter @workspace/api-spec run codegen` — regenerates typed API client with Source + Journey fields
+- [ ] Seed `youtubeChannelId` values for tracked people (researched manually — Sam Altman: UCxxx, etc.)
+- [ ] Reset + reseed sources table so `youtubeChannelId` + `isInterviewChannel` values are applied to existing rows
+
+**Next actions:**
+- [ ] Deploy from Replit (run the above in order)
+- [ ] After deploy: trigger `POST /api/interviews/refresh` once to bootstrap interview data
+- [ ] Validate `/interviews` page, `/sources` YouTube filter, `/my-journey` page all render correctly in production
+
+---
+date: 2026-04-25 IST
+tool: Claude (Cowork)
+model: claude-sonnet-4-6
+gate: partial — seed + Bug #4 fix done locally; Replit steps remain
+---
+**Objective:** Execute the migration plan — apply all v2 schema changes and unblock all three features for production.
+
+**Status:** partial — all code-level prep complete; DB push + codegen must run in Replit
+
+**What was done locally:**
+- `artifacts/api-server/src/lib/seed.ts` — added `youtubeChannelId` + `youtubeHandle` to 5 confirmed people:
+  - Andrej Karpathy: `UCXUPKJO5MZQN11PqgIvyuvQ` / `@AndrejKarpathy`
+  - Yann LeCun: `UCMU7l2bIv6MXlgJR3-E33Dw` / `@yannlecun`
+  - Andrew Ng: `UCep6Rpvw3PtOMJWAFpKl8Yw` / `@andrewng`
+  - Lex Fridman: `UCSHZKyawb77ixDdsGog4iWA` / `@lexfridman`
+  - Dwarkesh Patel: `UCXl4i9dYBrFOabk0xGmbkRA` / `@dwarkeshpatel`
+- `artifacts/api-server/src/lib/seed.ts` — fixed Bug #4: added `updateSeedData()` patching logic for:
+  - People: patches `youtubeChannelId` + `youtubeHandle` for existing DB rows where seed has values but DB is null
+  - Sources: patches `youtubeChannelId` + `isInterviewChannel` + `featuredPeopleIds` for existing DB rows
+
+**What was blocked locally:**
+- Codegen (`pnpm --filter @workspace/api-spec run codegen`): orval uses `unlink()` before writing, which fails on macOS-mounted virtiofs in the Linux sandbox (EPERM). Must run in Replit.
+- DB push: no DATABASE_URL available locally — must run in Replit.
+
+**Remaining Replit steps (run in this order):**
+1. `pnpm --filter @workspace/db run push` — applies ALL schema changes (interviews table, people columns, sources columns, journey tables)
+2. `pnpm --filter @workspace/api-spec run codegen` — regenerates typed API client + Zod schemas
+3. Add `ANTHROPIC_API_KEY` to Replit Secrets (if not already set)
+4. Restart server — `updateSeedData()` will auto-run and patch youtubeChannelId on existing people + sources
+5. `POST /api/interviews/refresh` — bootstrap interview data from all seeded channels
+
+**After deploy validation:**
+- `/interviews` page renders with fetched interviews
+- `/sources` page shows YouTube filter with channel thumbnails and INTERVIEW_CHANNEL badges
+- `/my-journey` page renders with profile editor + model reviews section
+- Logs show "Patched youtubeChannelId for existing people" (5 rows) and "Patched youtubeChannelId for existing sources" (9+ rows)
+
+**Open loops:**
+- Codegen type cast in `sources.tsx` (`src = source as typeof source & { ... }`) will remain until codegen runs in Replit
+- No `youtubeChannelId` found for: Sam Altman, Dario Amodei, Demis Hassabis, Ilya Sutskever, Geoffrey Hinton, Yoshua Bengio, Fei-Fei Li — these figures don't maintain personal YouTube channels; their appearances are captured via interview channel sources

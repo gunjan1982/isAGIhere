@@ -1,0 +1,549 @@
+isagihere.wiki
+Replit → Google Cloud Platform
+Complete Migration Plan   •   April 2026
+Owner: Gunjan Arora   |   Status: Ready to Execute
+
+Overview
+This plan moves isagihere.wiki completely off Replit — including the Express API, React/Vite frontend, PostgreSQL database, background jobs, and all secrets — onto Google Cloud Platform (GCP). After cutover, no runtime dependency on Replit infrastructure remains.
+The migration also serves as the v2 deploy opportunity: all three pending v2 features (YouTube Interview Monitor, AI YouTube Channels Directory, MY AI Journey) will be deployed fresh on GCP with their DB migrations applied, eliminating the backlog of Replit-pending work.
+
+Current vs. Target Architecture
+Layer
+Current (Replit)
+Target (GCP)
+Frontend
+Served by Replit autoscale (co-located with API)
+Firebase Hosting (CDN-backed, global edge)
+API Server
+Node 24 + Express 5, Replit autoscale
+Cloud Run — containerised, autoscaling to zero
+Database
+PostgreSQL 16, Replit managed DB
+Cloud SQL for PostgreSQL 16 (private VPC)
+Secrets
+Replit Secrets panel
+Secret Manager (versioned, IAM-gated)
+Background Jobs
+In-process setInterval() — 30 min RSS, 1 hr YouTube
+Cloud Scheduler → authenticated Cloud Run HTTP endpoints
+CI/CD
+Deploy-on-push via Replit Git integration
+GitHub Actions → Artifact Registry → Cloud Run
+Container Registry
+None (Replit manages runtime)
+Artifact Registry (Docker images)
+Auth Proxy
+/__clerk proxied through Replit host
+Same proxy — Cloud Run handles the /__clerk path
+Domain
+isagihere.wiki → Replit autoscale IP
+isagihere.wiki → Firebase Hosting (frontend) + Cloud Run (API)
+
+
+Migration Phases at a Glance
+Phase
+Name
+Est. Time
+Risk
+0
+Pre-migration audit & GCP setup
+Half day
+Low
+1
+Database migration
+Half day
+Medium
+2
+Containerise & deploy API to Cloud Run
+1 day
+Medium
+3
+Build & deploy frontend to Firebase Hosting
+2–3 hours
+Low
+4
+Scheduled jobs via Cloud Scheduler
+2 hours
+Low
+5
+DNS cutover (zero-downtime)
+1–2 hours
+Medium
+6
+Post-migration verification & cleanup
+1–2 days
+Low
+
+
+PHASE 0: Pre-Migration Audit & GCP Setup   Half day
+
+0.1  Audit Environment Variables
+Pull every secret from Replit Secrets. You will need all of the following for Secret Manager:
+	•	DATABASE_URL — Replit PostgreSQL connection string (export this for the dump)
+	•	CLERK_SECRET_KEY + VITE_CLERK_PUBLISHABLE_KEY — Clerk auth
+	•	ANTHROPIC_API_KEY — interview summariser (Claude Haiku)
+	•	RESEND_API_KEY — weekly digest + comment reply emails
+	•	Any BING_API_KEY or other feed-enrichment keys
+
+0.2  Create GCP Project
+# Create project
+gcloud projects create isagihere-prod --name='isagihere'
+gcloud config set project isagihere-prod
+
+# Enable required APIs
+gcloud services enable \
+  run.googleapis.com \
+  sqladmin.googleapis.com \
+  secretmanager.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  cloudscheduler.googleapis.com \
+  firebase.googleapis.com \
+  compute.googleapis.com
+
+0.3  Create Artifact Registry Repository
+gcloud artifacts repositories create isagihere \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description='isagihere.wiki container images'
+
+0.4  Store All Secrets in Secret Manager
+# Example — repeat for each secret
+echo -n 'your-secret-value' | \
+  gcloud secrets create DATABASE_URL --data-file=- --replication-policy=automatic
+
+# Other secrets to create:
+# CLERK_SECRET_KEY, VITE_CLERK_PUBLISHABLE_KEY,
+# ANTHROPIC_API_KEY, RESEND_API_KEY
+
+
+PHASE 1: Database Migration   Half day
+
+1.1  Create Cloud SQL Instance
+gcloud sql instances create isagihere-db \
+  --database-version=POSTGRES_16 \
+  --tier=db-g1-small \
+  --region=us-central1 \
+  --storage-type=SSD \
+  --storage-size=10GB \
+  --backup-start-time=03:00 \
+  --no-assign-ip \
+  --network=default
+
+# Create the database and user
+gcloud sql databases create isagihere --instance=isagihere-db
+gcloud sql users create isagihere_user \
+  --instance=isagihere-db \
+  --password=<strong-password>
+
+1.2  Export Database from Replit
+Run from Replit Shell. The export will capture all v1 production data (people, sources, communities, feed_items, comments, submissions).
+# In Replit Shell
+pg_dump $DATABASE_URL \
+  --format=custom \
+  --no-acl \
+  --no-owner \
+  -f isagihere_export.dump
+
+# Verify dump is non-empty
+ls -lh isagihere_export.dump
+
+1.3  Import to Cloud SQL
+# Upload dump to GCS bucket (create if needed)
+gsutil mb gs://isagihere-migration
+gsutil cp isagihere_export.dump gs://isagihere-migration/
+
+# Import via Cloud SQL
+gcloud sql import pgdump isagihere-db \
+  gs://isagihere-migration/isagihere_export.dump \
+  --database=isagihere
+
+1.4  Apply Pending v2 Migrations
+This is the right moment to apply all v2 schema changes that were blocked on Replit (interviews table, journey tables, sources columns). Use the Cloud SQL proxy locally:
+# Start Cloud SQL Auth Proxy
+cloud-sql-proxy isagihere-prod:us-central1:isagihere-db
+
+# Point Drizzle at proxy
+DATABASE_URL='postgresql://isagihere_user:<pw>@127.0.0.1:5432/isagihere' \
+  pnpm --filter @workspace/db run migrate
+
+# Verify new tables exist
+psql $LOCAL_PROXY_URL -c '\dt'
+# Should show: interviews, journey_entries, journey_tool_usage, plus all v1 tables
+
+1.5  Row-Count Verification
+Run these counts on both Replit DB and Cloud SQL and confirm they match before proceeding:
+Table
+Check query
+people
+SELECT COUNT(*) FROM people;
+sources
+SELECT COUNT(*) FROM sources;
+communities
+SELECT COUNT(*) FROM communities;
+feed_items
+SELECT COUNT(*) FROM feed_items;
+comments
+SELECT COUNT(*) FROM comments;
+submissions
+SELECT COUNT(*) FROM submissions;
+
+
+PHASE 2: Containerise & Deploy API to Cloud Run   1 day
+
+2.1  Write the Dockerfile
+Add this file at artifacts/api-server/Dockerfile. The build uses esbuild to produce a single CJS bundle, then runs it on a minimal Node 24 Alpine image:
+# artifacts/api-server/Dockerfile
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN pnpm --filter @workspace/api-server run build
+
+FROM node:24-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/artifacts/api-server/dist ./dist
+COPY --from=builder /app/artifacts/api-server/package.json .
+RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
+EXPOSE 8080
+CMD ["node", "dist/index.cjs"]
+
+2.2  Build & Push Image
+# From repo root
+docker build -f artifacts/api-server/Dockerfile \
+  -t us-central1-docker.pkg.dev/isagihere-prod/isagihere/api:latest .
+
+docker push us-central1-docker.pkg.dev/isagihere-prod/isagihere/api:latest
+
+2.3  Create Service Account for Cloud Run
+# Service account for the API
+gcloud iam service-accounts create isagihere-api \
+  --display-name='isagihere API service account'
+
+# Grant access to Cloud SQL
+gcloud projects add-iam-policy-binding isagihere-prod \
+  --member='serviceAccount:isagihere-api@isagihere-prod.iam.gserviceaccount.com' \
+  --role='roles/cloudsql.client'
+
+# Grant access to Secret Manager
+gcloud projects add-iam-policy-binding isagihere-prod \
+  --member='serviceAccount:isagihere-api@isagihere-prod.iam.gserviceaccount.com' \
+  --role='roles/secretmanager.secretAccessor'
+
+2.4  Deploy to Cloud Run
+gcloud run deploy isagihere-api \
+  --image=us-central1-docker.pkg.dev/isagihere-prod/isagihere/api:latest \
+  --region=us-central1 \
+  --platform=managed \
+  --allow-unauthenticated \
+  --service-account=isagihere-api@isagihere-prod.iam.gserviceaccount.com \
+  --add-cloudsql-instances=isagihere-prod:us-central1:isagihere-db \
+  --set-secrets=DATABASE_URL=DATABASE_URL:latest \
+  --set-secrets=CLERK_SECRET_KEY=CLERK_SECRET_KEY:latest \
+  --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest \
+  --set-secrets=RESEND_API_KEY=RESEND_API_KEY:latest \
+  --set-env-vars=NODE_ENV=production \
+  --min-instances=1 \
+  --max-instances=10 \
+  --memory=512Mi \
+  --cpu=1
+Set --min-instances=1 to avoid cold-start latency on the RSS/YouTube schedulers. Adjust up if needed after observing traffic patterns.
+
+2.5  Verify API Health
+# Cloud Run will give you a URL like:
+# https://isagihere-api-xxxx-uc.a.run.app
+
+curl https://isagihere-api-xxxx-uc.a.run.app/api/healthz
+# Expected: { "status": "ok" }
+
+curl https://isagihere-api-xxxx-uc.a.run.app/api/people | head -c 200
+# Expected: JSON array of people
+
+
+PHASE 3: Build & Deploy Frontend to Firebase Hosting   2-3 hours
+
+3.1  Configure API Base URL
+The Vite frontend needs to know the Cloud Run API URL before building. Set an environment variable:
+# artifacts/ai-hub/.env.production
+VITE_API_BASE_URL=https://isagihere-api-xxxx-uc.a.run.app
+
+# Or use the final custom domain (after Phase 5):
+VITE_API_BASE_URL=https://api.isagihere.wiki
+
+3.2  Build Frontend
+pnpm --filter @workspace/ai-hub run build
+# Output: artifacts/ai-hub/dist/
+
+3.3  Initialise Firebase & Deploy
+# Install Firebase CLI if needed
+npm install -g firebase-tools
+
+# Initialise (select Hosting only, set public dir to artifacts/ai-hub/dist)
+firebase init hosting
+
+# firebase.json should contain:
+{
+  "hosting": {
+    "public": "artifacts/ai-hub/dist",
+    "ignore": ["firebase.json"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}
+
+# Deploy
+firebase deploy --only hosting
+
+3.4  Add Custom Domain (isagihere.wiki)
+In Firebase Console → Hosting → Add Custom Domain, enter isagihere.wiki. Firebase will provide two A records and a TXT verification record. Add these to your DNS registrar.
+DNS Record Type
+Name
+Value
+Notes
+TXT
+isagihere.wiki
+firebase-verification=...
+Verification — add first, then wait for confirmation
+A
+isagihere.wiki
+151.101.x.x (Firebase IP 1)
+Firebase will supply exact IPs
+A
+isagihere.wiki
+151.101.x.x (Firebase IP 2)
+Both A records required for redundancy
+CNAME
+www
+isagihere.wiki
+Redirect www → apex
+
+Firebase auto-provisions an SSL certificate (Let's Encrypt) once DNS propagates. This usually takes 15-30 minutes.
+
+
+PHASE 4: Scheduled Jobs via Cloud Scheduler   2 hours
+
+The current code runs jobs via setInterval() inside the Express process. On Cloud Run this is fine as long as min-instances=1, but it is better practice to extract them into dedicated HTTP endpoints triggered by Cloud Scheduler. This is more reliable, observable, and survives restarts.
+4.1  Expose Scheduler Endpoints in the API
+Add two new internal routes to artifacts/api-server/src/routes/scheduler.ts (restrict to scheduler service account only):
+// artifacts/api-server/src/routes/scheduler.ts
+router.post('/api/internal/refresh-feeds', verifyScheduler, async (req, res) => {
+  await refreshFeeds();
+  res.json({ ok: true });
+});
+
+router.post('/api/internal/fetch-interviews', verifyScheduler, async (req, res) => {
+  await startInterviewScheduler();  // single pass
+  res.json({ ok: true });
+});
+
+// verifyScheduler middleware: checks OIDC token from Cloud Scheduler
+// Use google-auth-library to validate the bearer token
+
+4.2  Create Cloud Scheduler Jobs
+# RSS feed refresh — every 30 minutes
+gcloud scheduler jobs create http refresh-feeds \
+  --location=us-central1 \
+  --schedule='*/30 * * * *' \
+  --uri='https://isagihere-api-xxxx-uc.a.run.app/api/internal/refresh-feeds' \
+  --http-method=POST \
+  --oidc-service-account-email=isagihere-api@isagihere-prod.iam.gserviceaccount.com \
+  --oidc-token-audience='https://isagihere-api-xxxx-uc.a.run.app'
+
+# YouTube interview fetcher — every hour
+gcloud scheduler jobs create http fetch-interviews \
+  --location=us-central1 \
+  --schedule='0 * * * *' \
+  --uri='https://isagihere-api-xxxx-uc.a.run.app/api/internal/fetch-interviews' \
+  --http-method=POST \
+  --oidc-service-account-email=isagihere-api@isagihere-prod.iam.gserviceaccount.com \
+  --oidc-token-audience='https://isagihere-api-xxxx-uc.a.run.app'
+
+4.3  Remove In-Process setInterval() from API
+Once Cloud Scheduler is verified, remove the startup calls to refreshFeeds() and startInterviewScheduler() from artifacts/api-server/src/index.ts. The scheduler is now the source of truth for cadence.
+
+
+PHASE 5: DNS Cutover (Zero-Downtime)   1-2 hours
+
+At this point the GCP stack is fully live and verified on *.run.app and *.web.app URLs. The only remaining step is pointing isagihere.wiki at it.
+5.1  Reduce DNS TTL (24 Hours Before)
+Set all isagihere.wiki DNS record TTLs to 60 seconds at your registrar. This ensures that when you update the records, propagation is near-instant rather than waiting hours.
+5.2  Cutover Sequence
+Step
+Action
+Verify
+1
+Update A records for isagihere.wiki to Firebase Hosting IPs
+dig +short isagihere.wiki
+2
+Add CNAME api.isagihere.wiki → Cloud Run custom domain (or use URL map)
+curl https://api.isagihere.wiki/api/healthz
+3
+Update VITE_API_BASE_URL in frontend build to https://api.isagihere.wiki, rebuild, redeploy to Firebase
+Open DevTools network tab, confirm /api calls hit Cloud Run
+4
+Update Clerk Dashboard → Allowed Origins to include https://isagihere.wiki
+Log in and out, confirm auth still works
+5
+Update Resend sending domain / reply-to if domain-validated there
+Trigger a test digest email
+6
+Trigger manual feed refresh via /api/feed/refresh
+Confirm new items appear on home page
+
+5.3  Cloud Run Custom Domain (api.isagihere.wiki)
+gcloud run domain-mappings create \
+  --service=isagihere-api \
+  --domain=api.isagihere.wiki \
+  --region=us-central1
+
+# GCP will return CNAME records to add to your DNS registrar
+
+
+PHASE 6: Post-Migration Verification & Cleanup   1-2 days
+
+6.1  Full Smoke Test Checklist
+Feature
+Test
+Pass criteria
+Home page
+Load isagihere.wiki
+Page loads, Latest Feed shows items, no console errors
+Auth
+Sign up + sign in with Google OAuth
+Clerk redirects correctly, My Hub loads
+People
+Visit /people, click a person
+Profile loads with feed items
+Feed
+Visit /feed
+Paginated list, refresh button triggers POST /api/feed/refresh
+Interviews
+Visit /interviews
+Interview cards render (may be empty if youtubeChannelId not yet seeded)
+Sources
+Visit /sources, filter YOUTUBE
+YouTube channel cards appear
+MY AI Journey
+Visit /my-journey
+Page loads, form submits a review
+Admin
+Visit /admin as gunjan1982@gmail.com
+Submissions queue visible, approve/reject works
+Scheduler (RSS)
+Trigger Cloud Scheduler job manually in GCP Console
+Job shows status OK, feed_items table row count increases
+Scheduler (YouTube)
+Trigger Cloud Scheduler job manually
+Job shows status OK, interview fetch logged
+Email
+Submit a comment on a person profile
+Reply notification email arrives
+Search
+Search for a known person name
+Results returned
+
+6.2  Address Remaining v2 Blockers
+After migration, these open items from TECH_CONTEXT.md are still outstanding and should be done now:
+	•	Populate youtubeChannelId values for at least 10 tracked people (Sam Altman, Demis Hassabis, Jensen Huang, Ilya Sutskever, Andrej Karpathy, etc.) via the admin panel or a targeted UPDATE — Feature 1 is a no-op until this is done.
+	•	Run pnpm --filter @workspace/api-spec run codegen so the new Source fields (youtubeChannelId, isInterviewChannel, featuredPeopleIds) are visible to the frontend — required for Feature 2.
+	•	Verify ANTHROPIC_API_KEY is correctly set in Secret Manager and the interview summariser generates aiSummary + keyTakeaways.
+
+6.3  Set Up Ongoing CI/CD (GitHub Actions)
+Add .github/workflows/deploy.yml to auto-deploy on push to main:
+# .github/workflows/deploy.yml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - run: |
+          gcloud builds submit --config cloudbuild.yaml
+          gcloud run deploy isagihere-api --image ... --region us-central1
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm install && pnpm --filter @workspace/ai-hub run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SA }}
+          channelId: live
+
+6.4  Decommission Replit
+Keep Replit running for 30 days post-cutover as a fallback. Checklist before decommissioning:
+	•	Confirm no traffic hitting Replit URLs in its access logs for 7 consecutive days
+	•	Export a final database dump from Replit as an archive
+	•	Cancel Replit autoscale subscription / downgrade to free tier
+	•	Update docs/TECH_CONTEXT.md — change Deployment row from Replit to GCP Cloud Run + Firebase Hosting
+	•	Update docs/PROJECT_CONTEXT.md — change Tech Stack Deployment row
+
+
+Estimated Monthly GCP Cost
+Approximate figures for a solo project at typical traffic. All can be adjusted by instance size.
+Service
+Config
+Est. Cost/Month
+Cloud Run (API)
+1 min instance, 512 MB, ~5M req/month
+~$15–25
+Cloud SQL
+db-g1-small, 10 GB SSD, daily backup
+~$20–25
+Firebase Hosting
+~1 GB storage, ~10 GB transfer/month
+~$1–3 (usually free tier)
+Artifact Registry
+~2 GB Docker image storage
+~$0.20
+Cloud Scheduler
+2 jobs
+$0 (free tier covers 3 jobs/month)
+Secret Manager
+5 secrets, low access volume
+~$0.10
+Artifact Registry egress
+CI/CD pulls per deploy
+Negligible
+Total estimate
+
+~$40–55 / month
+Compare: Replit autoscale for a live production app runs $20-60+/month. GCP at this scale is broadly equivalent in cost while offering more control, observability, and portability.
+
+
+Rollback Plan
+If any phase fails and the issue cannot be resolved within 30 minutes during the cutover window:
+	•	Revert DNS A records for isagihere.wiki back to the Replit autoscale IP. Because TTL was reduced to 60s in Phase 5.1, propagation takes < 2 minutes.
+	•	Replit remains running in read-write mode throughout the migration — no writes were disabled.
+	•	The Cloud SQL database is not connected to Replit's data path, so reverting DNS does not cause data loss on either side.
+	•	Diagnose the GCP issue, fix, then re-execute the cutover sequence from Step 5.2.
+
+Critical: do NOT shut down the Replit deployment until you have confirmed 7+ days of stable operation on GCP.
+
+
+Appendix — Key GCP Concepts
+Term
+What it does in this stack
+Cloud Run
+Runs your containerised Express server. Scales to zero when idle, scales out under load. Replaces Replit autoscale.
+Firebase Hosting
+Serves the compiled React/Vite dist/ as a CDN-backed static site. Free SSL, global edge caching. Replaces Replit's static file serving.
+Cloud SQL
+Fully managed PostgreSQL. Automatic backups, point-in-time recovery. Replaces Replit's managed DB.
+Secret Manager
+Stores API keys/DB URLs as versioned secrets. Cloud Run mounts them as env vars at startup. Replaces Replit Secrets.
+Artifact Registry
+Docker image registry. Stores every build of the API container. Cloud Run pulls from here on each deploy.
+Cloud Scheduler
+Cron-as-a-service. Fires authenticated HTTP POST requests to Cloud Run endpoints on a schedule. Replaces in-process setInterval().
+Cloud Build
+Runs your Docker build in GCP. Optional — GitHub Actions can also build locally and push.
+Cloud Run domain mappings
+Maps a custom subdomain (api.isagihere.wiki) to a Cloud Run service with automatic SSL.

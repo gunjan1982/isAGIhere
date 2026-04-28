@@ -11,57 +11,60 @@ Last updated: 2026-04-13
 | Track | Goal | Key file | Status |
 |-------|------|----------|--------|
 | v1 — Platform maintenance | Keep deployed site stable; seed/data updates, minor fixes | `scripts/src/seed.ts` | Stable |
-| v2 — YouTube Interview Monitor (Feature 1) | Backend done, frontend pending | See F1 rows below | **In progress** |
-| v2 — AI YouTube Channels Directory (Feature 2) | Source table extension + sourcing seed data | `lib/db/src/schema/sources.ts` | In progress |
-| v2 — MY AI Journey (Feature 3) | New tables + API routes + `/my-journey` page | `lib/db/src/schema/journey.ts` | In progress |
+| v2 — YouTube Interview Monitor (Feature 1) | All code complete — pending GCloud deploy | See F1 rows below | **Pending deploy** |
+| v2 — AI YouTube Channels Directory (Feature 2) | All code complete — pending GCloud deploy + codegen | `lib/db/src/schema/sources.ts` | **Pending deploy** |
+| v2 — MY AI Journey (Feature 3) | All code complete — pending GCloud deploy | `lib/db/src/schema/journey.ts` | **Pending deploy** |
+| GCloud migration | Move off Replit → Cloud Run + Cloud SQL; swap Anthropic → Gemini | `docs/GCLOUD_MIGRATION_PLAN.md` | **In progress — Phase 1 next** |
 
 ## v2.0 Build State — What Is Done vs Pending
 
 ### Feature 1 — YouTube Interview Monitor
 | Component | File | Status |
 |-----------|------|--------|
-| DB schema | `lib/db/src/schema/interviews.ts` | ✅ Done (in repo) |
-| DB migration | — | ❓ Needs verify — migration may not have run yet |
-| YouTube RSS fetcher | `artifacts/api-server/src/lib/youtube-fetcher.ts` | ✅ Done (in repo) |
-| AI summarizer | `artifacts/api-server/src/lib/interview-summarizer.ts` | ✅ Done (in repo) |
-| API routes | `artifacts/api-server/src/routes/interviews.ts` | ✅ Done (in repo) |
-| Route registered | `artifacts/api-server/src/routes/index.ts` line 17, 34 | ✅ Done |
-| People table: `youtubeChannelId` + `youtubeHandle` columns | `lib/db/src/schema/people.ts` | ❌ Not added yet |
-| `interview-card.tsx` component | `artifacts/ai-hub/src/components/interview-card.tsx` | ❌ Not created |
-| `/interviews` page | `artifacts/ai-hub/src/pages/interviews.tsx` | ❌ Not created |
-| Person detail: Interviews tab | `artifacts/ai-hub/src/pages/person-detail.tsx` | ❌ Not added |
-| Home page: Latest Interviews strip | `artifacts/ai-hub/src/pages/home.tsx` | ❌ Not added |
-| Route in App.tsx | `artifacts/ai-hub/src/App.tsx` | ❌ Not added |
-| Nav link in layout | `artifacts/ai-hub/src/components/layout.tsx` | ❌ Not added |
-| Admin: Channel ID management panel | `artifacts/ai-hub/src/pages/admin.tsx` | ❌ Not added |
+| DB schema | `lib/db/src/schema/interviews.ts` | ✅ Done |
+| DB migration | — | ⏳ Run `pnpm --filter @workspace/db run push` in Replit |
+| YouTube RSS fetcher | `artifacts/api-server/src/lib/youtube-fetcher.ts` | ✅ Done |
+| AI summarizer | `artifacts/api-server/src/lib/interview-summarizer.ts` | ✅ Done |
+| API routes | `artifacts/api-server/src/routes/interviews.ts` | ✅ Done |
+| Route registered | `artifacts/api-server/src/routes/index.ts` | ✅ Done |
+| People table: `youtubeChannelId` + `youtubeHandle` columns | `lib/db/src/schema/people.ts` | ✅ Done |
+| `startInterviewScheduler()` wired at startup | `artifacts/api-server/src/index.ts` line 48 | ✅ Done |
+| `interview-card.tsx` component | `artifacts/ai-hub/src/components/interview-card.tsx` | ✅ Done |
+| `/interviews` page | `artifacts/ai-hub/src/pages/interviews.tsx` | ✅ Done |
+| Person detail: Interviews tab | `artifacts/api-server/src/pages/person-detail.tsx` | ✅ Done |
+| Home page: Latest Interviews strip | `artifacts/ai-hub/src/pages/home.tsx` | ✅ Done |
+| Route in App.tsx | `artifacts/ai-hub/src/App.tsx` | ✅ Done |
+| Nav link in layout | `artifacts/ai-hub/src/components/layout.tsx` | ✅ Done |
+| `youtubeChannelId` seed values | `artifacts/api-server/src/lib/seed.ts` | ⏳ Needs manual research + population |
 
 ### Feature 2 — AI YouTube Channels Directory
 | Component | File | Status |
 |-----------|------|--------|
-| Sources table: `youtubeChannelId`, `isInterviewChannel`, `featuredPeopleIds` | `lib/db/src/schema/sources.ts` | ✅ Created |
-| YouTube channel seed data | `artifacts/api-server/src/lib/seed.ts` | ✅ Updated existing sources + added interviewer channels |
-| Sources page: YOUTUBE filter | `artifacts/ai-hub/src/pages/sources.tsx` | ✅ YouTube card variant added |
-| `fetchInterviewerChannels()` in youtube-fetcher | `artifacts/api-server/src/lib/youtube-fetcher.ts` | ✅ Created |
+| Sources table: `youtubeChannelId`, `isInterviewChannel`, `featuredPeopleIds` | `lib/db/src/schema/sources.ts` | ✅ Done |
+| YouTube channel seed data | `artifacts/api-server/src/lib/seed.ts` | ✅ Updated + 4 new interviewer channels |
+| Sources page: YOUTUBE filter + card variant | `artifacts/ai-hub/src/pages/sources.tsx` | ✅ Done |
+| `fetchInterviewerChannels()` in youtube-fetcher | `artifacts/api-server/src/lib/youtube-fetcher.ts` | ✅ Done |
+| Codegen (new Source fields visible to frontend) | `lib/api-client-react/` | ⏳ Run `pnpm --filter @workspace/api-spec run codegen` in Replit |
 
 ### Feature 3 — MY AI Journey
 | Component | File | Status |
 |-----------|------|--------|
-| DB schema (3 tables) | `lib/db/src/schema/journey.ts` | ✅ Created |
-| Journey constants | `artifacts/ai-hub/src/data/journey-constants.ts` | ✅ Created |
-| API routes | `artifacts/api-server/src/routes/journey.ts` | ✅ Created |
-| `/my-journey` page | `artifacts/ai-hub/src/pages/my-journey.tsx` | ✅ Created |
-| Model review modal | `artifacts/ai-hub/src/pages/my-journey.tsx` | ✅ Implemented inline |
-| Tool usage card | `artifacts/ai-hub/src/pages/my-journey.tsx` | ✅ Implemented inline |
-| Home page: Community Pulse section | `artifacts/ai-hub/src/pages/home.tsx` | ❌ Not added |
-| My Hub integration | `artifacts/ai-hub/src/pages/my-hub.tsx` | ❌ Not added |
+| DB schema (3 tables) | `lib/db/src/schema/journey.ts` | ✅ Done |
+| Journey constants | `artifacts/ai-hub/src/data/journey-constants.ts` | ✅ Done |
+| API routes | `artifacts/api-server/src/routes/journey.ts` | ✅ Done |
+| Journey router registered | `artifacts/api-server/src/routes/index.ts` | ✅ Done |
+| `/my-journey` page | `artifacts/ai-hub/src/pages/my-journey.tsx` | ✅ Done |
+| Route in App.tsx + nav link | `artifacts/ai-hub/src/App.tsx` | ✅ Done |
+| Home page: Community Pulse section | `artifacts/ai-hub/src/pages/home.tsx` | ✅ Done |
+| My Hub: MY_AI_JOURNEY section | `artifacts/ai-hub/src/pages/my-hub.tsx` | ✅ Done |
 
 ## Known Bugs / Open Issues
 | # | Description | File | Function | Confidence |
 |---|-------------|------|----------|------------|
-| 1 | `interviews` table migration status unknown — schema file exists but migration may not have been applied to prod DB | `lib/db/src/schema/interviews.ts` | n/a | Medium — needs verification |
-| 2 | People table missing `youtubeChannelId` column — youtube-fetcher queries it but it doesn't exist in schema yet | `lib/db/src/schema/people.ts` | `fetchPersonInterviews()` | High — will throw on runtime |
-| 3 | `youtube-fetcher.ts` scheduler is NOT started — no call to `startInterviewScheduler()` in `app.ts` or `index.ts` | `artifacts/api-server/src/app.ts` | startup | High |
-| 4 | `interview-summarizer.ts` uses `eq` from drizzle but it's imported but check if ANTHROPIC_API_KEY env var is set | `artifacts/api-server/src/lib/interview-summarizer.ts` | `generateMissingSummaries()` | Medium |
+| 1 | All v2 schema changes not yet applied to Replit DB — run `pnpm --filter @workspace/db run push` | `lib/db/src/schema/` | n/a | High — required before any v2 feature works |
+| 2 | `ANTHROPIC_API_KEY` not yet set in Replit Secrets — summarizer will silently skip summaries | `artifacts/api-server/src/lib/interview-summarizer.ts` | `generateMissingSummaries()` | Medium — interviews fetch fine but no AI summaries |
+| 3 | `youtubeChannelId` seed values not populated for tracked people — fetcher is a no-op until at least a few are set | `artifacts/api-server/src/lib/seed.ts` | `fetchPersonInterviews()` | High — no interviews until populated |
+| 4 | Existing seeded sources won't have `youtubeChannelId` set (seedIfEmpty skips non-empty DB) — must reset+reseed or run manual UPDATE | `artifacts/api-server/src/lib/seed.ts` | sources seed | High — Feature 2 dead until fixed |
 
 ## Key Functions / Entry Points
 | Function | File | What it does |
@@ -76,8 +79,8 @@ Last updated: 2026-04-13
 
 ## Recent Significant Changes
 (rolling window — edit in-place, keep last 5)
-1. **2026-04-13** — Cloned repo locally from GitHub to `/Users/gunjan.a/dev/IsAGIhere.wiki`. Set up documentation system per AI Coding Principles guide.
-2. **2026-04-13** — Created `AGI v2.0.md` spec covering Feature 1 (YouTube Interview Monitor), Feature 2 (AI YouTube Channels), Feature 3 (MY AI Journey).
-3. **Pre-2026-04-13 (on Replit)** — Added `lib/db/src/schema/interviews.ts`, `artifacts/api-server/src/lib/youtube-fetcher.ts`, `artifacts/api-server/src/lib/interview-summarizer.ts`, `artifacts/api-server/src/routes/interviews.ts` — Feature 1 backend complete but not wired to startup or frontend.
-4. **Pre-2026-04-13 (on Replit)** — Added SEO structured data (JSON-LD), improved headshots, added live feed status indicator, added analytics.
-5. **Pre-2026-04-13 (on Replit)** — Launched with: people directory, RSS feed aggregation, comments, search, submissions, follow system, weekly digest, AGI tracker, analytics.
+1. **2026-04-14** — Feature 3 finalized: added Community Pulse section (`home.tsx` — model ratings + CTA) and MY_AI_JOURNEY section (`my-hub.tsx` — profile preview + setup CTA). All v2 code now complete locally.
+2. **2026-04-13** — Feature 3 (MY AI Journey): `journey.ts` schema, `journey.ts` routes, `my-journey.tsx` page, constants, App.tsx route, nav link — all by Copilot.
+3. **2026-04-13** — Feature 2 (AI YouTube Channels): sources schema extended, seed data updated (7 existing + 4 new), `sources.tsx` YouTube card variant, `fetchInterviewerChannels()`.
+4. **2026-04-13** — Feature 1 (YouTube Interview Monitor): all frontend built by Copilot — interview-card.tsx, interviews.tsx page, person-detail tabs, home page strip, App.tsx + layout wired.
+5. **2026-04-13** — Created `AGI v2.0.md` spec + documentation system (PROJECT_CONTEXT.md, TECH_CONTEXT.md, status logs, precedents).

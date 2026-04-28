@@ -15,6 +15,7 @@ import digestRouter from "./digest";
 import myFeedRouter from "./my-feed";
 import interviewsRouter from "./interviews";
 import journeyRouter from "./journey";
+import schedulerRouter from "./scheduler";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(digestRouter);
 router.use(myFeedRouter);
 router.use(interviewsRouter);
 router.use(journeyRouter);
+router.use(schedulerRouter);
 
 export default router;

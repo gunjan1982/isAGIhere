@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Marauder's Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#f5a623;--gold-dim:#c8841a;--gold-glow:rgba(245,166,35,0.15);
+  --green:#3ecf8e;--blue:#4f98a3;--orange:#e8813a;--red:#e05c5c;--purple:#a86fdf;
+  --bg:#0e0d0b;--surface:#151411;--surface-2:#1b1916;--surface-3:#222018;
+  --border:rgba(255,255,255,0.07);--border-gold:rgba(245,166,35,0.3);
+  --text:#d4d0c8;--text-muted:#7a7870;--text-faint:#4a4840;
+  --font-mono:'JetBrains Mono',monospace;--font-body:'Inter',system-ui,sans-serif;
+  --r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;
+  --c-0:#3ecf8e;--c-1:#4f98a3;--c-2:#d19900;--c-3:#e8813a;--c-4:#e05c5c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--gold-dim)}
+
+/* HEADER */
+.site-header{position:sticky;top:0;z-index:100;background:rgba(14,13,11,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--border-gold);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header-brand{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.header-title{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.header-sub{font-size:10px;color:var(--text-muted);letter-spacing:.04em;font-style:italic}
+.header-nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav-btn{padding:6px 12px;border-radius:var(--r-md);font-size:11px;font-weight:500;color:var(--text-muted);border:1px solid transparent;transition:all 150ms}
+.nav-btn:hover{color:var(--gold);border-color:var(--border-gold)}
+.nav-btn.active{color:var(--gold);background:var(--gold-glow);border-color:var(--border-gold)}
+
+/* HERO */
+.hero{padding:44px 24px 32px;max-width:1200px;margin:0 auto;border-bottom:1px solid var(--border)}
+.hero-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+.hero-title{font-size:clamp(24px,4vw,48px);font-weight:700;line-height:1.1;color:#fff;margin-bottom:10px}
+.hero-title span{color:var(--gold)}
+.hero-desc{font-size:14px;color:var(--text-muted);max-width:580px;margin-bottom:20px}
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+.hero-stat-num{font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--gold)}
+.hero-stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* TABS */
+.page-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 24px;background:var(--surface);position:sticky;top:61px;z-index:90;overflow-x:auto}
+.page-tab{padding:11px 18px;font-size:12px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all 150ms}
+.page-tab:hover{color:var(--text)}
+.page-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* SECTION */
+.section-wrap{max-width:1200px;margin:0 auto;padding:28px 24px}
+.section-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.section-heading{font-size:20px;font-weight:700;color:#fff;margin-bottom:5px}
+.section-desc{font-size:13px;color:var(--text-muted);max-width:620px;margin-bottom:24px}
+.page-panel{display:none}
+.page-panel.active{display:block}
+
+/* MATRIX */
+.matrix-wrap{overflow-x:auto;border:1px solid var(--border-gold);border-radius:var(--r-lg)}
+.mtable{width:100%;min-width:960px;border-collapse:collapse;background:var(--surface)}
+.mtable thead th{padding:12px 14px;text-align:left;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--surface-2)}
+.mtable thead th:first-child{color:var(--gold);width:130px;min-width:130px}
+.col-sub{display:block;font-size:8px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.lvl-cell{padding:14px;vertical-align:top}
+.lvl-badge{display:inline-flex;flex-direction:column;gap:2px;padding:7px 10px;border-radius:var(--r-md);border:1px solid;font-family:var(--font-mono);font-weight:700;font-size:9px;letter-spacing:.07em;text-transform:uppercase;min-width:105px;text-align:center}
+.lvl-badge .lb-sub{font-size:8px;font-weight:400;opacity:.75;letter-spacing:.03em}
+.lb0{color:var(--c-0);border-color:var(--c-0);background:rgba(62,207,142,.08)}
+.lb1{color:var(--c-1);border-color:var(--c-1);background:rgba(79,152,163,.08)}
+.lb2{color:var(--c-2);border-color:var(--c-2);background:rgba(209,153,0,.08)}
+.lb3{color:var(--c-3);border-color:var(--c-3);background:rgba(232,129,58,.08)}
+.lb4{color:var(--c-4);border-color:var(--c-4);background:rgba(224,92,92,.08)}
+.mtable td{padding:12px 14px;vertical-align:top;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:11px;color:var(--text);transition:background 100ms}
+.mtable td:last-child{border-right:none}
+.mtable tr:last-child td{border-bottom:none}
+.mtable tbody tr:hover td{background:rgba(245,166,35,.03)}
+.cp{font-weight:600;color:#e8e4dc;margin-bottom:3px;font-size:11px}
+.ctool{font-size:10px;color:var(--text-muted);margin-top:4px}
+.tag-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.tt{display:inline-block;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 5px;font-size:9px;font-family:var(--font-mono);color:var(--text-muted)}
+.tt.hl{border-color:rgba(245,166,35,.4);color:var(--gold);background:var(--gold-glow)}
+
+/* WINGS */
+.wings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.wing-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;transition:border-color 180ms,box-shadow 180ms}
+.wing-card:hover{border-color:var(--border-gold);box-shadow:0 0 20px rgba(245,166,35,.05)}
+.wing-hdr{padding:18px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+.wing-icon{font-size:26px;line-height:1;flex-shrink:0;margin-top:2px}
+.wing-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:2px}
+.wing-sub{font-size:10px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:.05em}
+.wing-body{padding:14px 18px}
+.wing-desc{font-size:12px;color:var(--text-muted);line-height:1.65;margin-bottom:12px}
+.wing-analogy{background:var(--surface-3);border-left:2px solid var(--gold);padding:7px 11px;font-size:11px;color:var(--text-muted);border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:12px;font-style:italic}
+.tools2{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px}
+.ti{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:7px 9px}
+.ti-name{font-size:10px;font-weight:700;font-family:var(--font-mono);color:var(--gold);margin-bottom:2px}
+.ti-desc{font-size:10px;color:var(--text-muted);line-height:1.4}
+.wp{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-faint);font-family:var(--font-mono);margin-top:2px}
+.wp-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.code-snip{background:#0a0908;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;font-family:var(--font-mono);font-size:10px;color:#b8c0cc;overflow-x:auto;margin:9px 0;line-height:1.75}
+.kw{color:#c792ea}.str{color:#c3e88d}.cm{color:#546e7a}.fn{color:#82aaff}
+.wing-cta{display:inline-block;margin-top:8px;padding:5px 11px;background:var(--gold-glow);border:1px solid var(--border-gold);border-radius:var(--r-md);font-size:10px;font-family:var(--font-mono);color:var(--gold);font-weight:600;transition:background 130ms}
+.wing-cta:hover{background:rgba(245,166,35,.25)}
+
+/* ECOSYSTEM */
+.eco-diagram{background:var(--surface);border:1px solid var(--border-gold);border-radius:var(--r-xl);padding:24px;margin-bottom:24px}
+.eco-layer{border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:10px}
+.eco-layer:last-child{margin-bottom:0}
+.eco-layer-title{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:9px}
+.eco-items{display:flex;flex-wrap:wrap;gap:7px}
+.eco-item{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 10px;font-size:11px;font-family:var(--font-mono);color:var(--text);transition:border-color 130ms,color 130ms;cursor:default}
+.eco-item:hover{border-color:var(--border-gold);color:var(--gold)}
+.eco-item.ac{border-color:rgba(245,166,35,.3);color:var(--gold);background:var(--gold-glow)}
+
+/* ASSESSMENT */
+.assess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.assess-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
+.assess-lv{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.assess-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.assess-lv-name{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.ai{display:flex;gap:7px;margin-bottom:7px;align-items:flex-start}
+.ac{width:15px;height:15px;border:1px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:1px;cursor:pointer;transition:all 130ms;display:flex;align-items:center;justify-content:center;font-size:9px}
+.ac:hover{border-color:var(--gold)}
+.ac.checked{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+.at{font-size:11px;color:var(--text-muted);line-height:1.5}
+.assess-result{margin-top:16px;background:var(--surface-3);border:1px solid var(--border-gold);border-radius:var(--r-lg);padding:14px 16px;font-size:12px;color:var(--text);display:none}
+.assess-result.visible{display:block}
+.assess-result strong{color:var(--gold)}
+#assess-score{font-family:var(--font-mono);font-size:26px;font-weight:700;color:var(--gold);display:block;margin-bottom:6px}
+
+/* GLOSSARY */
+.glos-search{width:100%;padding:9px 14px;background:var(--surface);border:1px solid var(--border-gold);border-radius:var(--r-lg);font-size:12px;color:var(--text);margin-bottom:18px;outline:none;font-family:var(--font-mono);transition:border-color 130ms}
+.glos-search:focus{border-color:var(--gold)}
+.glos-search::placeholder{color:var(--text-faint)}
+.glos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.gc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 130ms}
+.gc:hover{border-color:var(--border-gold)}
+.gc-term{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.gc-def{font-size:11px;color:var(--text-muted);line-height:1.55}
+.gc-tag{display:inline-block;margin-top:5px;padding:2px 6px;background:var(--surface-3);border-radius:var(--r-sm);font-size:9px;font-family:var(--font-mono);color:var(--text-faint)}
+
+.site-footer{margin-top:48px;border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:10px;color:var(--text-faint);font-family:var(--font-mono)}
+.site-footer span{color:var(--gold)}
+
+@media(max-width:768px){
+  .hero{padding:28px 16px 20px}
+  .section-wrap{padding:20px 16px}
+  .wings-grid{grid-template-columns:1fr}
+  .header-nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <circle cx="15" cy="15" r="13" stroke="#f5a623" stroke-width="1.2" opacity=".35"/>
+      <circle cx="15" cy="15" r="8" stroke="#f5a623" stroke-width="1"/>
+      <path d="M15 3L17.8 11.5L27 11.5L20 17L22.5 26L15 21L7.5 26L10 17L3 11.5L12.2 11.5Z" fill="#f5a623" opacity=".12" stroke="#f5a623" stroke-width=".7"/>
+      <circle cx="15" cy="15" r="2.2" fill="#f5a623"/>
+    </svg>
+    <div>
+      <div class="header-title">The AI Marauder's Map</div>
+      <div class="header-sub">I solemnly swear that I am up to no good.</div>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <button class="nav-btn active" onclick="setPage('matrix',this)">6×5 Matrix</button>
+    <button class="nav-btn" onclick="setPage('wings',this)">8 Wings</button>
+    <button class="nav-btn" onclick="setPage('ecosystem',this)">Full Map</button>
+    <button class="nav-btn" onclick="setPage('assess',this)">Where Am I?</button>
+    <button class="nav-btn" onclick="setPage('glossary',this)">Glossary</button>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">YOUR AI ROADMAP — V2 · 2026</div>
+  <h1 class="hero-title">Where are you on the <span>AI Map?</span></h1>
+  <p class="hero-desc">5 levels · 6 access modes · 8 capability wings · 80+ tools you can try today.<br>Find where you are, see what's next — vertically (deeper) or horizontally (adjacent).</p>
+  <div class="hero-stats">
+    <div><div class="hero-stat-num">30</div><div class="hero-stat-label">Matrix Cells</div></div>
+    <div><div class="hero-stat-num">8</div><div class="hero-stat-label">Capability Wings</div></div>
+    <div><div class="hero-stat-num">80+</div><div class="hero-stat-label">Named Tools</div></div>
+    <div><div class="hero-stat-num">5</div><div class="hero-stat-label">Complexity Levels</div></div>
+  </div>
+</section>
+
+<!-- TABS -->
+<nav class="page-tabs">
+  <button class="page-tab active" onclick="setPage('matrix',this)">🗺 6×5 Matrix</button>
+  <button class="page-tab" onclick="setPage('wings',this)">🏰 8 Wings</button>
+  <button class="page-tab" onclick="setPage('ecosystem',this)">🌐 Full Ecosystem</button>
+  <button class="page-tab" onclick="setPage('assess',this)">🧭 Where Am I?</button>
+  <button class="page-tab" onclick="setPage('glossary',this)">📖 Glossary</button>
+</nav>
+
+<!-- ═══════ PAGE: MATRIX ═══════ -->
+<div id="page-matrix" class="page-panel active">
+<div class="section-wrap">
+  <div class="section-eyebrow">ACCESS MODES × COMPLEXITY</div>
+  <div class="section-heading">The 30-Cell Journey Map</div>
+  <p class="section-desc">Rows = complexity level. Columns = how you access AI. Same row = same effort band. Move ↑ to go deeper, → to go adjacent.</p>
+  <div class="matrix-wrap">
+  <table class="mtable">
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>1. WEB / APP<span class="col-sub">Browser &amp; mobile</span></th>
+        <th>2. OMNIBUS<span class="col-sub">Multi-model clients</span></th>
+        <th>3. SELF-HOSTED<span class="col-sub">Your own infra</span></th>
+        <th>4. TERMINAL / CLI<span class="col-sub">Shell agents</span></th>
+        <th>5. DEV TOOLS<span class="col-sub">IDE-embedded AI</span></th>
+        <th>6. OWN CODE<span class="col-sub">Programmatic API</span></th>
+      </tr>
+    </thead>
+    <tbody>
+
+<tr>
+<td class="lvl-cell"><div class="lvl-badge lb0">🟢 BEGINNER<span class="lb-sub">First Contact</span></div></td>
+<td><div class="cp">ChatGPT.com / Claude.ai</div><div class="ctool">Also: Gemini Canvas, Pomelli, Perplexity<div class="tag-row"><span class="tt">chatgpt.com</span><span class="tt">claude.ai</span><span class="tt">perplexity.ai</span></div></div></td>
+<td><div class="cp">Jan.ai desktop</div><div class="ctool">Install once, switch GPT-4/Claude in one window<div class="tag-row"><span class="tt">Jan.ai</span><span class="tt">AnythingLLM</span></div></div></td>
+<td><div class="cp">LibreChat (Docker)</div><div class="ctool"><code>docker run librechat/librechat</code><div class="tag-row"><span class="tt">LibreChat</span><span class="tt">OpenWebUI</span></div></div></td>
+<td><div class="cp">aichat</div><div class="ctool"><code>brew install aichat</code> — ask anything<div class="tag-row"><span class="tt">aichat</span></div></div></td>
+<td><div class="cp">GitHub Copilot free</div><div class="ctool">Enable in VS Code — inline autocomplete<div class="tag-row"><span class="tt">GitHub Copilot</span><span class="tt">VS Code</span></div></div></td>
+<td><div class="cp">OpenAI Playground</div><div class="ctool">Browser sandbox, no code needed yet<div class="tag-row"><span class="tt">AI Studio</span><span class="tt">Playground</span></div></div></td>
+</tr>
+
+<tr>
+<td class="lvl-cell"><div class="lvl-badge lb1">🔵 BASIC<span class="lb-sub">Configure &amp; Point</span></div></td>
+<td><div class="cp">Claude — PDFs / files</div><div class="ctool">Upload docs, analyse spreadsheets, AI Studio Build<div class="tag-row"><span class="tt">Claude</span><span class="tt">ChatGPT ADA</span></div></div></td>
+<td><div class="cp">AnythingLLM multi-API</div><div class="ctool">Connect OpenAI + Anthropic + HF keys in one dashboard<div class="tag-row"><span class="tt hl">OpenRouter</span><span class="tt">AnythingLLM</span></div></div></td>
+<td><div class="cp">OpenWebUI + Ollama</div><div class="ctool"><code>ollama pull llama3.3</code> — private local model<div class="tag-row"><span class="tt">Ollama</span><span class="tt">OpenWebUI</span></div></div></td>
+<td><div class="cp">mods / sgpt</div><div class="ctool"><code>cat error.log | mods "fix this"</code><div class="tag-row"><span class="tt">mods</span><span class="tt">sgpt</span></div></div></td>
+<td><div class="cp">Cursor / Windsurf</div><div class="ctool">AI-first IDE — chat sidebar + multi-file edits<div class="tag-row"><span class="tt">Cursor</span><span class="tt">Windsurf</span></div></div></td>
+<td><div class="cp">OpenAI SDK scripts</div><div class="ctool">Copy Hello World from docs, run in terminal<div class="tag-row"><span class="tt">openai SDK</span><span class="tt">anthropic SDK</span></div></div></td>
+</tr>
+
+<tr>
+<td class="lvl-cell"><div class="lvl-badge lb2">🟡 INTERMEDIATE<span class="lb-sub">Customise &amp; Automate</span></div></td>
+<td><div class="cp">ChatGPT Plus / Custom GPTs</div><div class="ctool">Create GPTs for reusable workflows; Gemini Canvas<div class="tag-row"><span class="tt">Custom GPTs</span><span class="tt">Gemini Canvas</span></div></div></td>
+<td><div class="cp">LM Studio local+cloud</div><div class="ctool">Local fallback → cloud. HF Spaces omnibus<div class="tag-row"><span class="tt">LM Studio</span><span class="tt hl">OpenRouter</span><span class="tt">HF Spaces</span></div></div></td>
+<td><div class="cp">n8n + Ollama workflows</div><div class="ctool">Visual AI automation — email → summarise → CRM<div class="tag-row"><span class="tt">n8n</span><span class="tt">Jan.ai</span></div></div></td>
+<td><div class="cp">sgpt + shell aliases</div><div class="ctool"><code>alias explain-error='cat $1 | sgpt "fix"'</code><div class="tag-row"><span class="tt">sgpt</span><span class="tt">Claude Code</span></div></div></td>
+<td><div class="cp">Windsurf Cascade agent</div><div class="ctool">Agentic multi-file edits; Antigravity early access<div class="tag-row"><span class="tt">Windsurf</span><span class="tt">Antigravity</span></div></div></td>
+<td><div class="cp">LangChain / HF Transformers</div><div class="ctool">Chains, batch jobs, RAG basics in code<div class="tag-row"><span class="tt hl">LangChain</span><span class="tt">HF Transformers</span><span class="tt hl">OpenRouter SDK</span></div></div></td>
+</tr>
+
+<tr>
+<td class="lvl-cell"><div class="lvl-badge lb3">🟠 ADVANCED<span class="lb-sub">Orchestrated Systems</span></div></td>
+<td><div class="cp">Perplexity Pro</div><div class="ctool">Deep cited research; multimodal chains; Zapier+AI<div class="tag-row"><span class="tt">Perplexity Pro</span><span class="tt">Zapier AI</span></div></div></td>
+<td><div class="cp">n8n orchestration</div><div class="ctool">Multi-model branching; LibreChat + multiple endpoints<div class="tag-row"><span class="tt">n8n</span><span class="tt">LibreChat</span><span class="tt">Dify</span><span class="tt hl">OpenRouter</span></div></div></td>
+<td><div class="cp">Ollama GPU acceleration</div><div class="ctool">Home server / cloud VM; vLLM start; fine-tuned models<div class="tag-row"><span class="tt">Ollama GPU</span><span class="tt">vLLM</span></div></div></td>
+<td><div class="cp">Claude Code CLI</div><div class="ctool">Repo-wide edits; sgpt + Git hooks; auto-commit<div class="tag-row"><span class="tt">Claude Code</span><span class="tt">Git hooks</span></div></div></td>
+<td><div class="cp">Cursor agents + Zed</div><div class="ctool">Custom extensions; Antigravity multi-agent browser testing<div class="tag-row"><span class="tt">Cursor agents</span><span class="tt">Zed</span><span class="tt">Antigravity</span></div></div></td>
+<td><div class="cp">RAG + OpenRouter</div><div class="ctool">Vector DB + retrieval; LangChain agents; model routing<div class="tag-row"><span class="tt hl">RAG</span><span class="tt hl">OpenRouter API</span><span class="tt hl">LangChain agents</span><span class="tt">Chroma/Pinecone</span></div></div></td>
+</tr>
+
+<tr>
+<td class="lvl-cell"><div class="lvl-badge lb4">🔴 EXPERT<span class="lb-sub">Production-Grade</span></div></td>
+<td><div class="cp">Perplexity Computer</div><div class="ctool">Multi-agent enterprise; autonomous computer use<div class="tag-row"><span class="tt">ChatGPT Enterprise</span><span class="tt">Claude APIs</span></div></div></td>
+<td><div class="cp">n8n Enterprise / LiteLLM</div><div class="ctool">Load-balanced gateway; LiteLLM proxy for 100+ models<div class="tag-row"><span class="tt">LiteLLM</span><span class="tt">n8n Enterprise</span></div></div></td>
+<td><div class="cp">vLLM / Ray Serve</div><div class="ctool">Distributed GPU inference; fine-tuned model serving<div class="tag-row"><span class="tt">vLLM</span><span class="tt">Ray Serve</span><span class="tt hl">LoRA fine-tune</span></div></div></td>
+<td><div class="cp">Custom CLI + MCP server</div><div class="ctool">Build your own MCP server; agentic terminal pipelines<div class="tag-row"><span class="tt hl">MCP</span><span class="tt">Custom CLI</span></div></div></td>
+<td><div class="cp">Proprietary IDE plugins</div><div class="ctool">Fine-tuned model integration; team-wide agent workflows<div class="tag-row"><span class="tt">Custom plugin</span><span class="tt hl">MCP server</span></div></div></td>
+<td><div class="cp">FastAPI gateway + LLMOps</div><div class="ctool">CrewAI / LangGraph agents; Langfuse monitoring; Guardrails<div class="tag-row"><span class="tt hl">CrewAI</span><span class="tt hl">LangGraph</span><span class="tt hl">Langfuse</span><span class="tt hl">Guardrails AI</span></div></div></td>
+</tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <div style="margin-top:20px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);font-size:11px;color:var(--text-muted)">
+    <strong style="color:var(--gold)">How to read this map:</strong> &nbsp;
+    Highlighted tags <span class="tt hl">like this</span> are the "power tools" of that cell — the ones worth learning next.
+    Move <strong style="color:var(--text)">↑ vertically</strong> to go deeper in your current mode.
+    Move <strong style="color:var(--text)">→ horizontally</strong> to unlock an adjacent mode without changing your complexity level.
+  </div>
+</div>
+</div>
+
+<!-- ═══════ PAGE: WINGS ═══════ -->
+<div id="page-wings" class="page-panel">
+<div class="section-wrap">
+  <div class="section-eyebrow">THE HIDDEN CASTLE WINGS</div>
+  <div class="section-heading">8 Capability Wings</div>
+  <p class="section-desc">The matrix shows <em>how</em> you access AI. These wings are the underlying infrastructure, disciplines, and capabilities that power every Advanced and Expert cell.</p>
+
+  <div class="wings-grid">
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🏰</div><div><div class="wing-title">Wing 1 — MCP Corridor</div><div class="wing-sub">MODEL CONTEXT PROTOCOL</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Open standard (Anthropic, now OpenAI + Google + Microsoft) that lets AI agents connect to any external tool via one universal plug. USB-C for AI integrations.</p>
+        <div class="wing-analogy">"Every tool used to build its own adapter. MCP is the one connector that works for everything."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">MCP Host</div><div class="ti-desc">The AI app (Claude, Cursor, Windsurf) that initiates connections</div></div>
+          <div class="ti"><div class="ti-name">MCP Server</div><div class="ti-desc">External tool wrapped in MCP: GitHub, Postgres, Slack, your own API</div></div>
+          <div class="ti"><div class="ti-name">Claude Code</div><div class="ti-desc">Supports MCP natively — connect to your DB without custom integration code</div></div>
+          <div class="ti"><div class="ti-name">Cursor/Windsurf</div><div class="ti-desc">Both have native MCP support for IDE-embedded tool connections</div></div>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 4-Advanced · 5-Advanced · 6-Expert</div>
+        <a class="wing-cta" href="https://modelcontextprotocol.io" target="_blank" rel="noopener">→ modelcontextprotocol.io</a>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🧙</div><div><div class="wing-title">Wing 2 — Agent Frameworks Tower</div><div class="wing-sub">CREWAI · AUTOGEN · LANGGRAPH · ADK</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Frameworks for multi-agent systems — multiple AI agents with specialist roles working together on complex tasks. LangChain = one wizard. These = the Order of the Phoenix.</p>
+        <div class="wing-analogy">"Pick one: exploration → AutoGen. Production roles → CrewAI. Precise pipelines → LangGraph. Google Cloud → ADK."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">LangGraph</div><div class="ti-desc">Graph-based pipelines — precise state management, best for complex step-by-step flows</div></div>
+          <div class="ti"><div class="ti-name">AutoGen</div><div class="ti-desc">Microsoft — dynamic multi-agent conversation for research &amp; exploration</div></div>
+          <div class="ti"><div class="ti-name">CrewAI</div><div class="ti-desc">Role-based "crew" of specialists — production-ready, clear task assignment</div></div>
+          <div class="ti"><div class="ti-name">Google ADK</div><div class="ti-desc">Cloud-native, Vertex AI, container-first — best on Google Cloud stack</div></div>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 6-Advanced → 6-Expert</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">📚</div><div><div class="wing-title">Wing 3 — Vector DB Library</div><div class="wing-sub">CHROMA · PINECONE · WEAVIATE · QDRANT</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">RAG needs somewhere to store and search document embeddings. Vector DBs store the meaning of text as mathematical coordinates — find things semantically similar, not keyword-identical.</p>
+        <div class="wing-analogy">"A regular DB stores rows. A vector DB stores meaning. Search by 'what this is about', not 'exact words'."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">Chroma</div><div class="ti-desc">Free, local, Python-native — start every RAG project here</div></div>
+          <div class="ti"><div class="ti-name">Pinecone</div><div class="ti-desc">Managed cloud, auto-scales, generous free tier — go-to for production</div></div>
+          <div class="ti"><div class="ti-name">Weaviate</div><div class="ti-desc">Hybrid semantic + keyword search, self-host or cloud</div></div>
+          <div class="ti"><div class="ti-name">pgvector</div><div class="ti-desc">Already on PostgreSQL? Add vector search with one extension</div></div>
+        </div>
+        <div class="code-snip"><span class="kw">from</span> langchain_community.vectorstores <span class="kw">import</span> Chroma
+vs = Chroma.<span class="fn">from_documents</span>(docs, OpenAIEmbeddings())
+results = vs.<span class="fn">similarity_search</span>(<span class="str">"anxiety management"</span>, k=5)</div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 3-Intermediate · 6-Intermediate → Advanced</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🔭</div><div><div class="wing-title">Wing 4 — LLMOps Observatory</div><div class="wing-sub">HELICONE · LANGFUSE · LANGSMITH · W&amp;B</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Once your AI app is in production, you need to watch it. LLMOps tools give traces, cost tracking, eval pipelines, and debugging. Google Analytics — but for your AI.</p>
+        <div class="wing-analogy">"You wouldn't run a web app without analytics. Don't run an AI app without observability."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">Helicone</div><div class="ti-desc">One-line setup: change base_url and every call is logged + costed automatically</div></div>
+          <div class="ti"><div class="ti-name">Langfuse</div><div class="ti-desc">Open-source, self-hostable — full traces, eval pipelines, team dashboards</div></div>
+          <div class="ti"><div class="ti-name">LangSmith</div><div class="ti-desc">LangChain-native tracing + eval + prompt management</div></div>
+          <div class="ti"><div class="ti-name">Weights &amp; Biases</div><div class="ti-desc">Experiment tracking for fine-tuning runs — the ML standard</div></div>
+        </div>
+        <div class="code-snip"><span class="cm"># Helicone: 1 line = instant observability</span>
+client = OpenAI(base_url=<span class="str">"https://oai.helicone.ai/v1"</span>,
+  default_headers={<span class="str">"Helicone-Auth"</span>: <span class="str">f"Bearer {key}"</span>})</div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 6-Intermediate → Expert</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">✍️</div><div><div class="wing-title">Wing 5 — Prompt Engineering Chamber</div><div class="wing-sub">COT · FEW-SHOT · ROLE · TREE OF THOUGHT</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Evolved from "write better questions" into a systematic discipline with named, repeatable techniques. 40–60% accuracy improvement with zero code changes or cost increases.</p>
+        <div class="wing-analogy">"The only wing that cuts across all 30 cells. Better prompts improve every mode, every level."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">Chain of Thought</div><div class="ti-desc">"Think step by step" — best for reasoning, maths, multi-step diagnosis</div></div>
+          <div class="ti"><div class="ti-name">Few-shot</div><div class="ti-desc">Show 2–3 examples before your question — 30–50% quality improvement</div></div>
+          <div class="ti"><div class="ti-name">Role Prompting</div><div class="ti-desc">"You are a clinical psychologist..." — activates domain-specific knowledge</div></div>
+          <div class="ti"><div class="ti-name">Tree of Thought</div><div class="ti-desc">AI explores multiple reasoning branches in parallel — complex problems</div></div>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: ALL 6 columns, ALL 5 levels — this is the universal skill</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🧬</div><div><div class="wing-title">Wing 6 — Fine-Tuning Laboratory</div><div class="wing-sub">LoRA · QLoRA · PEFT · UNSLOTH</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Re-train a model on your specific data to permanently specialise its behaviour — not just reference a textbook, but absorb the knowledge permanently.</p>
+        <div class="wing-analogy">"RAG = doctor with a textbook on the desk. Fine-tuning = doctor who went to medical school on your specific cases."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">LoRA / QLoRA</div><div class="ti-desc">Fine-tune small adapter layers only — runs on consumer GPU. The default method.</div></div>
+          <div class="ti"><div class="ti-name">Unsloth</div><div class="ti-desc">2–5× faster LoRA, free, open-source — the fastest way to fine-tune locally</div></div>
+          <div class="ti"><div class="ti-name">HF PEFT</div><div class="ti-desc">HuggingFace library — full menu of parameter-efficient fine-tuning methods</div></div>
+          <div class="ti"><div class="ti-name">OpenAI FT API</div><div class="ti-desc">Easiest start — GPT-3.5/4o-mini via API, no GPU, no infra needed</div></div>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 3-Expert · 6-Expert</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🎨</div><div><div class="wing-title">Wing 7 — Multimodal Studios</div><div class="wing-sub">IMAGE · VIDEO · AUDIO · SPEECH</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">Text is one modality. In 2026, the real frontier is combining images, video, and audio. Every category has both browser-based consumer tools and programmable APIs.</p>
+        <div class="wing-analogy">"Text LLMs are one instrument. Multimodal AI is the full orchestra — and it's all available via API."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">Midjourney / Flux</div><div class="ti-desc">Best image gen — Midjourney for aesthetics, Flux open-source for local use</div></div>
+          <div class="ti"><div class="ti-name">Sora 2 / Veo 3</div><div class="ti-desc">OpenAI + Google 2026 frontier video — long-form, cinematic, audio-sync</div></div>
+          <div class="ti"><div class="ti-name">ElevenLabs</div><div class="ti-desc">Voice cloning, TTS API — production-grade audio with emotion control</div></div>
+          <div class="ti"><div class="ti-name">Whisper</div><div class="ti-desc">OpenAI speech-to-text — runs locally (open-source) or via API</div></div>
+        </div>
+        <div class="tag-row" style="margin-bottom:10px">
+          <span class="tt">DALL-E 3</span><span class="tt">Ideogram 2.0</span><span class="tt">Runway Gen-4</span><span class="tt">Kling 2.6</span><span class="tt">Suno</span><span class="tt">NotebookLM</span>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 1-Basic (web tools) · 6-Intermediate (via API in code)</div>
+      </div>
+    </div>
+
+    <div class="wing-card">
+      <div class="wing-hdr"><div class="wing-icon">🛡️</div><div><div class="wing-title">Wing 8 — Guardrails &amp; Safety Vault</div><div class="wing-sub">GUARDRAILS AI · NEMO · BEDROCK · LLAMAGUARD</div></div></div>
+      <div class="wing-body">
+        <p class="wing-desc">As AI runs in production you need safeguards against hallucinations, PII leaks, jailbreaks, and off-topic responses. Critical for healthcare, legal, consulting, and any sensitive domain.</p>
+        <div class="wing-analogy">"The Hogwarts wards — invisible until something goes wrong, but the foundation of trust at scale."</div>
+        <div class="tools2">
+          <div class="ti"><div class="ti-name">Guardrails AI</div><div class="ti-desc">Open-source Python framework — validate inputs/outputs against custom rules</div></div>
+          <div class="ti"><div class="ti-name">NeMo Guardrails</div><div class="ti-desc">NVIDIA — programmable safety rails via conversation flow files</div></div>
+          <div class="ti"><div class="ti-name">Amazon Bedrock</div><div class="ti-desc">Managed multi-model safety — blocks 88% harmful content out of box</div></div>
+          <div class="ti"><div class="ti-name">LlamaGuard</div><div class="ti-desc">Meta open-source content moderation model — runs entirely locally</div></div>
+        </div>
+        <div class="wp"><div class="wp-dot"></div>Matrix placement: 6-Intermediate → Expert (production-grade apps)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ═══════ PAGE: ECOSYSTEM ═══════ -->
+<div id="page-ecosystem" class="page-panel">
+<div class="section-wrap">
+  <div class="section-eyebrow">THE FULL PICTURE</div>
+  <div class="section-heading">AI Ecosystem Map — 2026</div>
+  <p class="section-desc">Every layer of the AI stack — from models to interfaces to safety. Hover any item to highlight it.</p>
+  <div class="eco-diagram">
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">⚡ LAYER 0 — MODELS (The Brains)</div>
+      <div class="eco-items">
+        <span class="eco-item ac">GPT-4o / o3</span><span class="eco-item ac">Claude 3.7 Sonnet</span><span class="eco-item ac">Gemini 2.5 Pro</span>
+        <span class="eco-item">Llama 3.3 70B</span><span class="eco-item">DeepSeek-R1</span><span class="eco-item">Mistral Large</span>
+        <span class="eco-item">Qwen 2.5</span><span class="eco-item">Phi-4</span><span class="eco-item">Command R+</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">🔌 LAYER 1 — ACCESS &amp; ROUTING (How you reach models)</div>
+      <div class="eco-items">
+        <span class="eco-item">OpenAI API</span><span class="eco-item">Anthropic API</span><span class="eco-item">Google Vertex AI</span>
+        <span class="eco-item ac">OpenRouter (500+ models, 1 API key)</span><span class="eco-item">LiteLLM Proxy</span>
+        <span class="eco-item">Ollama (local)</span><span class="eco-item">vLLM (self-hosted)</span>
+        <span class="eco-item">Groq (fast inference)</span><span class="eco-item">Together AI</span><span class="eco-item">HF Inference API</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">🖥️ LAYER 2 — INTERFACES (The 6 Matrix Columns)</div>
+      <div class="eco-items">
+        <span class="eco-item">1 · Web/App: ChatGPT, Claude, Gemini, Perplexity</span>
+        <span class="eco-item">2 · Omnibus: Jan.ai, AnythingLLM, LM Studio</span>
+        <span class="eco-item">3 · Self-Hosted: OpenWebUI, LibreChat, Ollama</span>
+        <span class="eco-item">4 · Terminal: Claude Code, sgpt, aichat, mods</span>
+        <span class="eco-item">5 · Dev Tools: Cursor, Windsurf, Antigravity, Zed</span>
+        <span class="eco-item">6 · Own Code: Python/Node APIs, LangChain, SDKs</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">🔗 LAYER 3 — FRAMEWORKS &amp; ORCHESTRATION (Wings 1 + 2)</div>
+      <div class="eco-items">
+        <span class="eco-item ac">MCP — universal tool connector</span>
+        <span class="eco-item ac">LangChain — chains, agents, RAG</span>
+        <span class="eco-item ac">LangGraph — graph-based pipelines</span>
+        <span class="eco-item ac">CrewAI — role-based multi-agent</span>
+        <span class="eco-item ac">AutoGen — agent conversations (Microsoft)</span>
+        <span class="eco-item">Google ADK</span><span class="eco-item">n8n (visual)</span>
+        <span class="eco-item">Dify</span><span class="eco-item">Flowise</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">🧠 LAYER 4 — MEMORY &amp; KNOWLEDGE (Wing 3)</div>
+      <div class="eco-items">
+        <span class="eco-item ac">Chroma — local, free, start here</span>
+        <span class="eco-item ac">Pinecone — managed cloud, production</span>
+        <span class="eco-item">Weaviate — hybrid search</span>
+        <span class="eco-item">Qdrant — high-performance</span>
+        <span class="eco-item">pgvector — PostgreSQL extension</span>
+        <span class="eco-item">Milvus</span><span class="eco-item">Redis Vector</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">📊 LAYER 5 — OBSERVABILITY &amp; SAFETY (Wings 4 + 8)</div>
+      <div class="eco-items">
+        <span class="eco-item ac">Helicone — 1-line cost tracking</span>
+        <span class="eco-item">Langfuse — open-source observability</span>
+        <span class="eco-item">LangSmith — LangChain-native</span>
+        <span class="eco-item">Weights &amp; Biases</span>
+        <span class="eco-item">Braintrust — eval + prompts</span>
+        <span class="eco-item ac">Guardrails AI</span>
+        <span class="eco-item">NeMo Guardrails (NVIDIA)</span>
+        <span class="eco-item">Amazon Bedrock Guardrails</span>
+        <span class="eco-item">LlamaGuard (Meta)</span>
+      </div>
+    </div>
+
+    <div class="eco-layer">
+      <div class="eco-layer-title">🎓 LAYER 6 — SPECIALISED SKILLS (Wings 5 + 6 + 7)</div>
+      <div class="eco-items">
+        <span class="eco-item ac">Prompt Engineering: CoT, Few-shot, Role, ToT</span>
+        <span class="eco-item ac">Fine-tuning: LoRA, QLoRA, Unsloth, Axolotl, PEFT</span>
+        <span class="eco-item">Image: Midjourney, DALL-E, Flux, Ideogram, Stable Diffusion</span>
+        <span class="eco-item">Video: Sora 2, Veo 3, Runway Gen-4, Kling 2.6</span>
+        <span class="eco-item">Audio: ElevenLabs, Whisper, Suno, NotebookLM</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ═══════ PAGE: ASSESSMENT ═══════ -->
+<div id="page-assess" class="page-panel">
+<div class="section-wrap">
+  <div class="section-eyebrow">SELF-ASSESSMENT</div>
+  <div class="section-heading">Where Am I on the Map?</div>
+  <p class="section-desc">Check everything that applies to you. Your score will map you to a level and suggest your best next steps.</p>
+
+  <div class="assess-grid">
+
+    <div class="assess-card">
+      <div class="assess-lv"><div class="assess-dot" style="background:var(--c-0)"></div><div class="assess-lv-name" style="color:var(--c-0)">🟢 Beginner</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="1"></div><div class="at">I use ChatGPT, Claude or Gemini through a browser regularly</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="1"></div><div class="at">I have asked AI to summarise a document or write something for me</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="1"></div><div class="at">I use Perplexity or another AI search tool for research</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="1"></div><div class="at">I have compared outputs from at least 2 different AI tools</div></div>
+    </div>
+
+    <div class="assess-card">
+      <div class="assess-lv"><div class="assess-dot" style="background:var(--c-1)"></div><div class="assess-lv-name" style="color:var(--c-1)">🔵 Basic</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="2"></div><div class="at">I have uploaded PDFs or files to an AI tool and asked questions about them</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="2"></div><div class="at">I use a multi-provider tool (OpenRouter, Jan.ai, AnythingLLM, LM Studio)</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="2"></div><div class="at">I have run Ollama locally or used Docker to spin up a self-hosted model</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="2"></div><div class="at">I use Cursor, Windsurf or GitHub Copilot for coding assistance</div></div>
+    </div>
+
+    <div class="assess-card">
+      <div class="assess-lv"><div class="assess-dot" style="background:var(--c-2)"></div><div class="assess-lv-name" style="color:var(--c-2)">🟡 Intermediate</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="3"></div><div class="at">I have built or customised a ChatGPT / Claude / Gemini workflow or custom GPT</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="3"></div><div class="at">I use n8n, Make or Zapier to connect AI with other tools automatically</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="3"></div><div class="at">I write Python/Node scripts that call LLM APIs programmatically</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="3"></div><div class="at">I understand what prompt engineering techniques like CoT or few-shot mean</div></div>
+    </div>
+
+    <div class="assess-card">
+      <div class="assess-lv"><div class="assess-dot" style="background:var(--c-3)"></div><div class="assess-lv-name" style="color:var(--c-3)">🟠 Advanced</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="4"></div><div class="at">I have built a RAG pipeline — loading docs into a vector DB and querying it</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="4"></div><div class="at">I use OpenRouter API to route between models in code</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="4"></div><div class="at">I use Claude Code CLI or sgpt for repo-wide automated code changes</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="4"></div><div class="at">I have built multi-step agent pipelines with LangChain or similar</div></div>
+    </div>
+
+    <div class="assess-card">
+      <div class="assess-lv"><div class="assess-dot" style="background:var(--c-4)"></div><div class="assess-lv-name" style="color:var(--c-4)">🔴 Expert</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="5"></div><div class="at">I run vLLM or Ray Serve to self-host fine-tuned models in production</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="5"></div><div class="at">I have fine-tuned a model with LoRA/QLoRA on my own dataset</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="5"></div><div class="at">I use LangGraph, CrewAI or AutoGen for production multi-agent systems</div></div>
+      <div class="ai"><div class="ac" onclick="toggle(this)" data-pts="5"></div><div class="at">I have built or deployed an MCP server for AI tool integration</div></div>
+    </div>
+
+  </div>
+
+  <div class="assess-result" id="assess-result">
+    <span id="assess-score"></span>
+    <span id="assess-label"></span>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════ PAGE: GLOSSARY ═══════ -->
+<div id="page-glossary" class="page-panel">
+<div class="section-wrap">
+  <div class="section-eyebrow">EVERY TERM EXPLAINED</div>
+  <div class="section-heading">Glossary</div>
+  <p class="section-desc">Every tool, concept and acronym on the map — explained in plain English. Type to filter.</p>
+  <input class="glos-search" type="text" id="glosSearch" placeholder="Search: RAG, MCP, LoRA, Ollama..." oninput="filterGlos(this.value)">
+  <div class="glos-grid" id="glosGrid"></div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <span>The AI Marauder's Map</span> · V2 · April 2026 · Built from conversation history, research, and 80+ tool evaluations. Mischief managed.
+</footer>
+
+<script>
+// ── PAGE NAVIGATION ──
+function setPage(id, btn) {
+  document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn, .page-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn, .page-tab').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) b.classList.add('active');
+  });
+}
+
+// ── ASSESSMENT ──
+function toggle(el) {
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+  updateScore();
+}
+function updateScore() {
+  const checks = document.querySelectorAll('.ac.checked');
+  let total = 0;
+  checks.forEach(c => total += parseInt(c.dataset.pts || 0));
+  const max = 80; // 20 items, avg 4pts
+  const pct = total;
+  let level, next, color;
+  if (pct <= 6)       { level = '🟢 Beginner — First Contact';       next = 'Try uploading a PDF to Claude and asking questions about it. Install Jan.ai to access multiple models.'; color = 'var(--c-0)'; }
+  else if (pct <= 14) { level = '🔵 Basic — Configure & Point';       next = 'Install Cursor or Windsurf as your AI-first IDE. Try running Ollama locally with a small model.'; color = 'var(--c-1)'; }
+  else if (pct <= 26) { level = '🟡 Intermediate — Customise & Automate'; next = 'Build your first RAG pipeline with Chroma + LangChain. Try OpenRouter to access 500+ models with one API key.'; color = 'var(--c-2)'; }
+  else if (pct <= 40) { level = '🟠 Advanced — Orchestrated Systems'; next = 'Explore LangGraph for agent pipelines. Add Langfuse or Helicone observability to your apps. Try MCP with Claude Code.'; color = 'var(--c-3)'; }
+  else                { level = '🔴 Expert — Production-Grade';        next = 'You\'re on the map\'s frontier. Explore fine-tuning with LoRA/Unsloth, build a production MCP server, or contribute to open-source agent frameworks.'; color = 'var(--c-4)'; }
+
+  const scoreEl = document.getElementById('assess-score');
+  const labelEl = document.getElementById('assess-label');
+  const resultEl = document.getElementById('assess-result');
+  scoreEl.textContent = total + ' pts';
+  scoreEl.style.color = color;
+  labelEl.innerHTML = '<strong>' + level + '</strong><br><br>📍 <em>Suggested next step:</em> ' + next;
+  resultEl.classList.add('visible');
+}
+
+// ── GLOSSARY DATA ──
+const GLOSSARY = [
+  {term:'RAG',def:'Retrieval-Augmented Generation — give an LLM access to your own documents at query time. Load docs → chunk → embed → store in vector DB → retrieve relevant chunks → feed to LLM. Prevents hallucination on domain-specific topics.',tag:'Core Concept'},
+  {term:'LLM',def:'Large Language Model — a neural network trained on vast text data that can generate, summarise, translate, and reason. GPT-4, Claude 3.7, Gemini 2.5, Llama 3.3 are all LLMs.',tag:'Core Concept'},
+  {term:'Ollama',def:"Local LLM runner. `ollama pull llama3.3` downloads a model; `ollama run llama3.3` starts a chat. Runs a local API server so OpenWebUI, Jan.ai, and your own code can all connect to it.",tag:'Tool · Self-Hosted'},
+  {term:'OpenRouter',def:'Unified API gateway: 500+ models from 60+ providers via ONE endpoint. Fully OpenAI-compatible — change the base_url and model name, nothing else. Auto-routes to cheapest/fastest provider. Prevents vendor lock-in.',tag:'Tool · Access'},
+  {term:'LangChain',def:'Open-source Python/JS framework for building LLM apps. Chains (sequence of LLM calls), Agents (LLM decides which tool to use), RAG (doc retrieval pipeline), Memory (conversation state). The plumbing that connects LLMs to the real world.',tag:'Framework'},
+  {term:'LangGraph',def:'Extension of LangChain for building graph-based agent pipelines. Each node is a function; edges are conditions. Best for step-by-step workflows where you need precise state control and debuggability.',tag:'Framework · Agents'},
+  {term:'CrewAI',def:'Multi-agent framework where you define a "crew" of specialist agents (researcher, writer, editor) each with a role, goal, and tools. Agents collaborate on tasks. Best for production pipelines with clear task assignment.',tag:'Framework · Agents'},
+  {term:'AutoGen',def:'Microsoft framework for dynamic multi-agent conversations. Agents talk to each other to solve problems. Best for open-ended research tasks where you want agents to negotiate the approach.',tag:'Framework · Agents'},
+  {term:'MCP',def:'Model Context Protocol — open standard for connecting AI agents to external tools (databases, APIs, file systems, browsers) via a universal plug. Works like USB-C: one protocol, any tool. Supported by Claude, Cursor, Windsurf, and more.',tag:'Standard · Wing 1'},
+  {term:'Vector Database',def:'Stores text as mathematical vectors (embeddings) representing semantic meaning. You search by meaning ("find things about anxiety") not exact keywords. Powers RAG systems. Examples: Chroma, Pinecone, Weaviate, Qdrant, pgvector.',tag:'Infrastructure · Wing 3'},
+  {term:'Chroma',def:'Free, open-source vector database that runs locally in Python. The easiest way to start building RAG pipelines. `pip install chromadb` and you\'re ready. Graduate to Pinecone when you need managed cloud hosting.',tag:'Tool · Vector DB'},
+  {term:'Pinecone',def:'Managed cloud vector database — auto-scales, fully managed, generous free tier. The standard choice for production RAG applications. No infra to manage.',tag:'Tool · Vector DB'},
+  {term:'Embedding',def:'A vector (list of numbers) that represents the semantic meaning of text. "King" and "Queen" have embeddings that are close together. Generated by embedding models (text-embedding-3-small, all-MiniLM). Used in vector DBs for similarity search.',tag:'Concept · RAG'},
+  {term:'Langfuse',def:'Open-source LLM observability platform — traces every prompt and response, shows token costs, enables eval pipelines, team dashboards. Can be self-hosted for full data privacy. The Prometheus of LLM apps.',tag:'Tool · LLMOps'},
+  {term:'Helicone',def:'LLM observability via a one-line change — point your OpenAI base_url at Helicone and every call is instantly logged, costed, and traceable. Free tier very generous. Fastest path to production observability.',tag:'Tool · LLMOps'},
+  {term:'LoRA',def:'Low-Rank Adaptation — fine-tuning method that trains only small adapter layers instead of all model weights. 100× fewer trainable parameters, runs on a consumer GPU. The default method for most fine-tuning projects.',tag:'Concept · Wing 6'},
+  {term:'Fine-tuning',def:'Re-training a pre-trained model on your specific dataset so it permanently learns your domain, style, or task. Unlike RAG (give it docs to read), fine-tuning changes the model\'s weights. Uses LoRA/QLoRA for efficiency.',tag:'Concept · Wing 6'},
+  {term:'Chain of Thought',def:'Prompt engineering technique: add "think step by step" or "let\'s reason through this" to get the model to show its reasoning. Improves accuracy on multi-step problems, maths, and logical reasoning by 30–60%.',tag:'Prompt Engineering · Wing 5'},
+  {term:'n8n',def:'Open-source visual workflow automation tool — drag-and-drop nodes to connect AI, APIs, databases, and services. Like Zapier but self-hostable, code-optional, and 400+ integrations. Perfect for automating AI pipelines without Python.',tag:'Tool · Automation'},
+  {term:'Claude Code',def:"Anthropic's terminal-based agentic coding tool. Run `claude` in your project directory — it reads your entire codebase, proposes multi-file edits as diffs, runs tests, makes git commits. You approve every change. The gold standard for terminal AI coding.",tag:'Tool · Terminal'},
+  {term:'Cursor',def:"AI-first code editor built on VS Code. Inline autocomplete, chat sidebar that sees your entire codebase, Composer for multi-file changes, and agents that can autonomously complete tasks. The most popular AI IDE for professional developers.",tag:'Tool · Dev Tools'},
+  {term:'Windsurf',def:'AI-first IDE by Codeium with Cascade — an agentic mode that can plan and execute multi-step coding tasks autonomously across your codebase. Strong context awareness and good at following project conventions.',tag:'Tool · Dev Tools'},
+  {term:'Antigravity',def:"Google's agentic development platform — multiple AI agents (coder, tester, designer) that can operate your editor, terminal, and browser. Gemini-powered. Treats the IDE as a space for agents to work in, not just assist with.",tag:'Tool · Dev Tools'},
+  {term:'Hugging Face',def:'The GitHub of AI — hosts 800,000+ models, datasets, and demo apps (Spaces). Free inference API. HF Transformers library lets you run models in Python with `pipeline("task")`. Central hub for the open-source AI community.',tag:'Platform · Models'},
+  {term:'vLLM',def:'Open-source high-throughput LLM serving framework. Run your own models with an OpenAI-compatible API at production scale. Uses PagedAttention for memory efficiency. The standard for self-hosted model serving at scale.',tag:'Tool · Self-Hosted'},
+  {term:'Prompt Engineering',def:'The discipline of crafting inputs to LLMs to maximise quality, accuracy, and reliability of outputs. Includes techniques: zero-shot, few-shot, chain-of-thought, role prompting, tree-of-thought, meta-prompting. Cuts across all 30 matrix cells.',tag:'Skill · Wing 5'},
+  {term:'Guardrails AI',def:'Open-source Python framework for validating LLM inputs and outputs. Define validators (no PII, on-topic, correct format) and they run as middleware around your LLM calls. The seatbelt for production AI apps.',tag:'Tool · Safety · Wing 8'},
+  {term:'Agent',def:'An LLM that can take actions — not just generate text, but call tools, browse the web, write files, run code, and make decisions about what to do next. The difference between a consultant and an employee: agents act.',tag:'Concept · Advanced'},
+  {term:'OpenWebUI',def:'Self-hosted web interface for running Ollama models. Beautiful ChatGPT-like UI, supports multiple models, conversation history, file uploads. Run entirely locally — no data leaves your machine.',tag:'Tool · Self-Hosted'},
+  {term:'Whisper',def:"OpenAI's open-source speech-to-text model. Runs locally, supports 99 languages, handles accents well. Available as a Python library or via OpenAI API. The standard for transcription in AI apps.",tag:'Tool · Multimodal'},
+  {term:'ElevenLabs',def:'Best-in-class voice AI platform — text-to-speech with emotion control, voice cloning from 30 seconds of audio, multi-language support. Has an API for programmatic use in apps.',tag:'Tool · Multimodal'},
+  {term:'Unsloth',def:'Open-source library that makes LoRA fine-tuning 2–5× faster with 50% less memory usage. Free. Works on consumer GPUs. Makes fine-tuning accessible without expensive cloud compute.',tag:'Tool · Fine-tuning'},
+];
+
+function renderGlos(items) {
+  const grid = document.getElementById('glosGrid');
+  grid.innerHTML = items.map(g => `
+    <div class="gc">
+      <div class="gc-term">${g.term}</div>
+      <div class="gc-def">${g.def}</div>
+      <span class="gc-tag">${g.tag}</span>
+    </div>
+  `).join('');
+}
+function filterGlos(q) {
+  const lq = q.toLowerCase();
+  const filtered = GLOSSARY.filter(g =>
+    g.term.toLowerCase().includes(lq) ||
+    g.def.toLowerCase().includes(lq) ||
+    g.tag.toLowerCase().includes(lq)
+  );
+  renderGlos(filtered);
+}
+renderGlos(GLOSSARY);
+</script>
+</body>
+</html>

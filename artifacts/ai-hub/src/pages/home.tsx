@@ -1,6 +1,6 @@
 import { useGetFeatured, useGetStats } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity, ChevronRight, Film } from "lucide-react";
+import { ArrowRight, Users, Radio, MessageSquare, TrendingUp, AlertCircle, Activity, ChevronRight, Film, Cpu, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { FeedCard } from "@/components/feed-card";
@@ -11,6 +11,25 @@ import { VisitorHeatmap } from "@/components/visitor-heatmap";
 import { useQuery } from "@tanstack/react-query";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type ModelRatingRow = {
+  provider: string;
+  modelName: string;
+  avgRating: string | null;
+  reviewCount: number;
+};
+
+function useCommunityModelRatings() {
+  return useQuery<ModelRatingRow[]>({
+    queryKey: ["journey-model-ratings"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/journey/models`);
+      if (!res.ok) throw new Error("Failed to fetch model ratings");
+      return res.json();
+    },
+    staleTime: 10 * 60_000,
+  });
+}
 
 function useLatestInterviews() {
   return useQuery<{ items: InterviewItem[] }>({
@@ -238,6 +257,7 @@ export default function Home() {
   const feedMinsAgo = useFeedStatus();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: interviewsData, isLoading: isInterviewsLoading } = useLatestInterviews();
+  const { data: modelRatings, isLoading: isModelRatingsLoading } = useCommunityModelRatings();
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -508,6 +528,76 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Community Pulse — MY AI Journey aggregated ratings */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-border/50 pb-2">
+          <h2 className="text-xl font-bold font-mono text-foreground flex items-center gap-2">
+            <Cpu className="h-5 w-5 text-primary" />
+            COMMUNITY_PULSE
+          </h2>
+          <Link href="/my-journey" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+            MY_JOURNEY <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {isModelRatingsLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-20 bg-secondary" />)}
+          </div>
+        ) : modelRatings && modelRatings.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {modelRatings.slice(0, 8).map((row) => {
+              const rating = row.avgRating ? parseFloat(row.avgRating) : null;
+              const stars = rating ? Math.round(rating) : null;
+              return (
+                <div
+                  key={`${row.provider}-${row.modelName}`}
+                  className="border border-border/50 bg-card p-4 flex flex-col gap-2 hover:border-primary/40 transition-colors group"
+                >
+                  <div className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">
+                    {row.provider}
+                  </div>
+                  <div className="font-bold text-sm font-mono truncate group-hover:text-primary transition-colors">
+                    {row.modelName}
+                  </div>
+                  {stars !== null ? (
+                    <div className="flex items-center gap-1">
+                      {Array(5).fill(0).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${i < stars ? "fill-primary text-primary" : "text-border"}`}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] font-mono text-muted-foreground/50">NO_RATINGS_YET</div>
+                  )}
+                  <div className="text-[10px] font-mono text-muted-foreground">
+                    {row.reviewCount} {row.reviewCount === 1 ? "REVIEW" : "REVIEWS"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="border border-dashed border-border/40 bg-secondary/10 p-8 flex flex-col items-center gap-4 text-center">
+            <Cpu className="h-10 w-10 text-muted-foreground/20" />
+            <div className="space-y-1">
+              <p className="font-mono text-sm font-semibold text-foreground">BE_THE_FIRST_TO_REVIEW</p>
+              <p className="font-mono text-xs text-muted-foreground max-w-sm">
+                Log your AI tool usage and rate frontier models. Help the community understand what's actually useful in production.
+              </p>
+            </div>
+            <Link
+              href="/my-journey"
+              className="text-xs font-mono text-primary border border-primary/40 px-4 py-2 hover:bg-primary/10 transition-colors"
+            >
+              START_MY_AI_JOURNEY →
+            </Link>
+          </div>
+        )}
+      </section>
 
       {/* Directory Access */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-border/50">
