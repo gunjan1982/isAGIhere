@@ -47,7 +47,7 @@ app.use(clerkMiddleware());
 app.use(sitemapRouter);
 app.use("/api", router);
 
-app.get("/*", (req, res, next) => {
+app.get("/{*path}", (req, res, next) => {
   if (req.path.startsWith("/api")) {
     return next();
   }
