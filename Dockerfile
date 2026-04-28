@@ -21,7 +21,9 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
 ENV VITE_CLERK_PROXY_URL=${VITE_CLERK_PROXY_URL}
 ENV NODE_ENV=${NODE_ENV}
 
-RUN pnpm --filter @workspace/ai-hub run build
+# Frontend (ai-hub) is pre-built on the host before docker build runs.
+# artifacts/ai-hub/dist/public is copied in via COPY . . above.
+# Only api-server needs to be compiled inside the container (pure TS, no native deps).
 RUN pnpm --filter @workspace/api-server run build
 
 ENV PORT=8080
