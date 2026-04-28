@@ -16,7 +16,7 @@ PROJECT_ID="${PROJECT_ID:?PROJECT_ID is required in .env.local}"
 REGION="${REGION:-asia-south1}"
 SERVICE_NAME="${SERVICE_NAME:-isagihere}"
 SQL_INSTANCE="${SQL_INSTANCE:-${PROJECT_ID}:asia-south1:isagihere-db}"
-IMAGE_NAME="asia-south1-docker.pkg.dev/${PROJECT_ID}/isagihere-repo/${SERVICE_NAME}"
+IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/isagihere-repo/${SERVICE_NAME}"
 
 echo "Enabling required Google Cloud services..."
 gcloud services enable \
@@ -31,6 +31,7 @@ gcloud config set run/region "$REGION"
 
 echo "Building Docker image locally with build-time Vite env vars..."
 docker build \
+  --platform linux/amd64 \
   --build-arg VITE_PORT="${PORT:-5173}" \
   --build-arg BASE_PATH="${BASE_PATH:-/}" \
   --build-arg VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" \
