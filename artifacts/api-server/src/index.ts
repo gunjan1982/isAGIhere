@@ -2,6 +2,8 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { seedIfEmpty, updateSeedData } from "./lib/seed";
 import { buildDigestAndSendToAll } from "./lib/digest-scheduler";
+import { refreshFeeds } from "./lib/rss-fetcher";
+import { fetchPersonInterviews, fetchInterviewerChannels } from "./lib/youtube-fetcher";
 
 const rawPort = process.env["PORT"];
 
@@ -30,9 +32,35 @@ app.listen(port, (err) => {
     .then(() => updateSeedData())
     .catch((e) => logger.error({ err: e }, "Startup background tasks failed"));
 
+  // Kick off feed + interview refresh on startup, then repeat every 15 minutes
+  scheduleRefresh();
+
   // Weekly digest scheduler — fires every Monday at 08:00 UTC
   scheduleWeeklyDigest();
 });
+
+function scheduleRefresh() {
+  const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+
+  async function runRefresh() {
+    try {
+      const fetched = await refreshFeeds();
+      logger.info({ fetched }, "Feed refresh complete");
+    } catch (e) {
+      logger.error({ err: e }, "Feed refresh failed");
+    }
+    try {
+      await Promise.all([fetchPersonInterviews(), fetchInterviewerChannels()]);
+      logger.info("Interview refresh complete");
+    } catch (e) {
+      logger.error({ err: e }, "Interview refresh failed");
+    }
+  }
+
+  // Run immediately on startup, then every 15 minutes
+  runRefresh();
+  setInterval(runRefresh, INTERVAL_MS);
+}
 
 function scheduleWeeklyDigest() {
   function msUntilNextMonday8am(): number {
